@@ -1,0 +1,8 @@
+abduco
+======
+
+abduco provides the session management and attach/detach functionality
+of screen(1) and tmux(1) together with dvtm(1) it is a nearly complete
+replacement of the before mentioned tools.
+
+See http://www.brain-dump.org/projects/abduco for the latest version.

@@ -1,0 +1,7 @@
+# normal ignores
+.*
+*.[ao]
+*.lo
+*.so
+tags
+!.gitignore

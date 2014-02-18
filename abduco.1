@@ -1,0 +1,71 @@
+.TH ABDUCO 1 abduco\-VERSION
+.nh
+.SH NAME
+abduco
+.SH SYNOPSIS
+.B abduco
+.RB [ \-e 
+.IR detachkey ]
+.RB \-c 
+.RB name
+.RB command
+.RI [ args \ ... "" ]
+.br
+.B abduco
+.RB [ \-e 
+.IR detachkey ]
+.RB \-n 
+.RB name
+.RB command
+.RI [ args \ ... "" ]
+.br
+.B abduco
+.RB [ \-e 
+.IR detachkey ]
+.RB \-A 
+.RB name
+.RB command
+.RI [ args \ ... "" ]
+.br
+.B abduco
+.RB [ \-e 
+.IR detachkey ]
+.RB \-a
+.RB name
+.br
+.SH DESCRIPTION
+.B abduco
+provides a way to disconnect a given application from it's controlling
+terminal thus it provides roughly the same session attach/detach support as
+.BR screen(1) , " tmux(1)" " or" " dtach(1)".
+
+By default all session related information is stored in 
+.B $HOME/.abduco
+or as a fallback in 
+.BR /tmp/.abduco .
+However if a given session name starts either with a dot or a forward slash
+it is interpreted as a path name and used unmodified i.e. relatively to the
+current working directory.
+.SH OPTIONS
+If no command line arguments are given all currently active sessions are
+printed together with their respective creation date.
+.TP
+.B \-v
+Print version information to standard output and exit.
+.TP
+.BI \-e \ detachkey
+Set the key to detach which by default is set to CTRL+\\ i.e. ^\\ to detachkey.
+.TP
+.BI \-c
+Create a new session and attach immediately to it.
+.TP
+.BI \-n
+Create a new session but don't attach to it.
+.TP
+.BI \-A
+Try to connect to an existing session, upon failure create said session and attach immediately to it.
+.TP
+.BI \-a 
+Attach to an existing session.
+.SH AUTHOR
+abduco is written by Marc André Tanner <mat at brain-dump.org>
