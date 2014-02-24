@@ -337,25 +337,37 @@ static bool attach_session(const char *name) {
 	return true;
 }
 
+static int session_filter(const struct dirent *d) {
+	return d->d_name[0] != '.';
+}
+
+static int session_comparator(const struct dirent **a, const struct dirent **b) {
+	struct stat sa, sb;
+	if (stat((*a)->d_name, &sa) != 0)
+		return -1;
+	if (stat((*b)->d_name, &sb) != 0)
+		return 1;
+	return sa.st_atime < sb.st_atime ? -1 : 1;
+}
+
 static int list_session() {
 	if (create_socket_dir() == -1)
 		return 1;
 	chdir(sockaddr.sun_path);
-	DIR *d = opendir(sockaddr.sun_path);
-	if (!d)
+	struct dirent **namelist;
+	int n = scandir(sockaddr.sun_path, &namelist, session_filter, session_comparator);
+	if (n < 0)
 		return 1;
 	puts("Active sessions");
-	struct dirent *e;
-	while ((e = readdir(d))) {
-		if (e->d_name[0] != '.') {
-			struct stat sb; char buf[255];
-			if (stat(e->d_name, &sb) == 0) {
-				strftime(buf, sizeof(buf), "%a%t %d.%m.%Y %T", localtime(&sb.st_atime));
-				printf(" %s\t%s\n", buf, e->d_name);
-			}
+	while (n--) {
+		struct stat sb; char buf[255];
+		if (stat(namelist[n]->d_name, &sb) == 0) {
+			strftime(buf, sizeof(buf), "%a%t %d.%m.%Y %T", localtime(&sb.st_atime));
+			printf(" %s\t%s\n", buf, namelist[n]->d_name);
 		}
+		free(namelist[n]);
 	}
-	closedir(d);
+	free(namelist);
 	return 0;
 }
 
