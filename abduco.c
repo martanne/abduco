@@ -350,7 +350,7 @@ static int list_session() {
 		if (e->d_name[0] != '.') {
 			struct stat sb; char buf[255];
 			if (stat(e->d_name, &sb) == 0) {
-				strftime(buf, sizeof(buf), "%A%t %d.%m.%Y %T", localtime(&sb.st_atime));
+				strftime(buf, sizeof(buf), "%a%t %d.%m.%Y %T", localtime(&sb.st_atime));
 				printf(" %s\t%s\n", buf, e->d_name);
 			}
 		}
