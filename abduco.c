@@ -282,6 +282,7 @@ static bool create_session(const char *name, char * const argv[]) {
 		wait(&status); /* wait for first fork */
 		if ((status = read_all(pipefds[0], errormsg, sizeof(errormsg))) > 0) {
 			write_all(STDERR_FILENO, errormsg, status);
+			unlink(sockaddr.sun_path);
 			exit(EXIT_FAILURE);
 		}
 		close(pipefds[0]);
