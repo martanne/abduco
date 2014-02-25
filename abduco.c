@@ -251,6 +251,7 @@ static bool create_session(const char *name, char * const argv[]) {
 				break;
 			default:
 				/* SIGTTIN, SIGTTU */
+				sa.sa_handler = server_sigterm_handler;
 				sigaction(SIGTERM, &sa, NULL);
 				sigaction(SIGINT, &sa, NULL);
 				sa.sa_handler = SIG_IGN;

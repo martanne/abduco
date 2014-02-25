@@ -126,6 +126,10 @@ static void server_pty_died_handler(int sig) {
 	errno = errsv;
 }
 
+static void server_sigterm_handler(int sig) {
+	exit(EXIT_FAILURE); /* invoke atexit handler */
+}
+
 static void server_atexit_handler() {
 	unlink(sockaddr.sun_path);
 }
