@@ -123,15 +123,6 @@ static int client_mainloop() {
 					pkt.type = MSG_DETACH;
 					client_send_packet(&pkt);
 					return -1;
-				} else if (pkt.u.msg[0] == cur_term.c_cc[VSUSP]) {
-					pkt.type = MSG_DETACH;
-					client_send_packet(&pkt);
-					tcsetattr(0, TCSADRAIN, &orig_term);
-					client_show_cursor();
-					info(NULL);
-					kill(getpid(), SIGTSTP); 
-					tcsetattr(0, TCSADRAIN, &cur_term);
-					client.need_resize = true;
 				} else {
 					client_send_packet(&pkt);
 				}
