@@ -74,7 +74,7 @@ static bool server_recv_packet(Client *c) {
 	ClientPacketState *pkt = &c->input;
 	if (is_client_packet_complete(pkt))
 		return true;
-	int count = sizeof(ClientPacket) - pkt->off; 
+	size_t count = sizeof(ClientPacket) - pkt->off;
 	ssize_t len = recv(c->socket, ((char *)&pkt->pkt) + pkt->off, count, 0);
 	switch (len) {
 	case -1:
@@ -95,7 +95,7 @@ static bool server_send_packet(Client *c) {
 	ServerPacketState *pkt = &c->output;
 	if (is_server_packet_complete(pkt))
 		return true;
-	int count = pkt->pkt->len - pkt->off;
+	size_t count = pkt->pkt->len - pkt->off;
 	ssize_t len = send(c->socket, pkt->pkt->buf + pkt->off, count, 0);
 	switch (len) {
 	case -1:

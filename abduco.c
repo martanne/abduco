@@ -80,7 +80,7 @@ typedef struct {
 /* packet sent from server to all clients */
 typedef struct {
 	char buf[BUFSIZ];
-	ssize_t len;
+	size_t len;
 } ServerPacket;
 
 typedef struct {
@@ -116,9 +116,9 @@ typedef struct {
 	ServerPacket pty_output;
 	ClientPacketState pty_input;
 	ClientPacket queue[10];
-	int queue_count;
-	int queue_insert;
-	int queue_remove;
+	unsigned int queue_count;
+	unsigned int queue_insert;
+	unsigned int queue_remove;
 	int pty;
 	int exit_status;
 	struct termios term;
@@ -184,7 +184,7 @@ static int create_socket_dir() {
 	if (!dir)
 		dir = "/tmp";
 	int len = snprintf(sockaddr.sun_path, maxlen, "%s/.%s/", dir, server.name);
-	if (len >= maxlen)
+	if (len < 0 || (size_t)len >= maxlen)
 		return -1;
 	if (mkdir(sockaddr.sun_path, 0750) == -1 && errno != EEXIST)
 		return -1;

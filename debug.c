@@ -35,7 +35,7 @@ static void print_client_packet(const char *prefix, ClientPacket *pkt) {
 
 	if (pkt->type == MSG_CONTENT) {
 		fprintf(stderr, "%s %s len: %d content: ", prefix, s, pkt->len);
-		for (int i = 0; i < pkt->len && i < sizeof(pkt->u.msg); i++)
+		for (size_t i = 0; i < pkt->len && i < sizeof(pkt->u.msg); i++)
 			fprintf(stderr, "%c", pkt->u.msg[i]);
 		fprintf(stderr, "\n");
 	} else {

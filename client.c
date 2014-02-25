@@ -7,7 +7,7 @@ static void client_sigwinch_handler(int sig) {
 static ssize_t write_all(int fd, const char *buf, size_t len) {
 	ssize_t ret = len;
 	while (len > 0) {
-		int res = write(fd, buf, len);
+		ssize_t res = write(fd, buf, len);
 		if (res < 0) {
 			if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)
 				continue;
@@ -24,7 +24,7 @@ static ssize_t write_all(int fd, const char *buf, size_t len) {
 static ssize_t read_all(int fd, char *buf, size_t len) {
 	ssize_t ret = len;
 	while (len > 0) {
-		int res = read(fd, buf, len);
+		ssize_t res = read(fd, buf, len);
 		if (res < 0) {
 			if (errno == EWOULDBLOCK)
 				return ret - len;
@@ -51,9 +51,9 @@ static bool client_send_packet(ClientPacket *pkt) {
 }
 
 static bool client_recv_packet(ServerPacket *pkt) {
-	pkt->len = read_all(server.socket, pkt->buf, sizeof(pkt->buf));
+	ssize_t len = pkt->len = read_all(server.socket, pkt->buf, sizeof(pkt->buf));
 	print_server_packet("client-recv:", pkt);
-	if (pkt->len <= 0) {
+	if (len <= 0) {
 		debug("FAILED\n");
 		server.running = false;
 		return false;
