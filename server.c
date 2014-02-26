@@ -42,18 +42,19 @@ static Client *server_accept_client(time_t now) {
 	return c;
 }
 
-static bool server_read_pty(ServerPacket *pkt) {
-	ssize_t len = read(server.pty, pkt->buf, sizeof(pkt->buf));
+static bool server_read_pty(Packet *pkt) {
+	pkt->type = MSG_CONTENT;
+	ssize_t len = read(server.pty, pkt->u.msg, sizeof(pkt->u.msg));
 	if (len != -1)
 		pkt->len = len;
 	else if (errno != EAGAIN && errno != EINTR)
 		server.running = false;
-	print_server_packet("server-read-pty:", pkt);
+	print_packet("server-read-pty:", pkt);
 	return len > 0;
 }
 
 static bool server_write_pty(ClientPacketState *pkt) {
-	int count = pkt->pkt.len - pkt->off; 
+	size_t count = pkt->pkt.len - pkt->off;
 	ssize_t len = write(server.pty, pkt->pkt.u.msg + pkt->off, count);
 	if (len == -1) {
 		if (errno != EAGAIN && errno != EINTR)
@@ -65,16 +66,39 @@ static bool server_write_pty(ClientPacketState *pkt) {
 	return len == count;
 }
 
-static void server_place_packet(Client *c, ServerPacket *pkt) {
+static void server_place_packet(Client *c, Packet *pkt) {
 	c->output.pkt = pkt;
 	c->output.off = 0;
+}
+
+static bool server_recv_packet_header(Client *c) {
+	ClientPacketState *pkt = &c->input;
+	if (pkt->off >= packet_header_size())
+		return true;
+	size_t count = packet_header_size() - pkt->off;
+	ssize_t len = recv(c->socket, ((char *)&pkt->pkt) + pkt->off, count, 0);
+	switch (len) {
+	case -1:
+		if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR) {
+	case 0:
+			c->state = STATE_DISCONNECTED;
+		}
+		break;
+	default:
+		pkt->off += len;
+		break;
+	}
+	print_client_packet_state("server-recv:", pkt);
+	return len == count;
 }
 
 static bool server_recv_packet(Client *c) {
 	ClientPacketState *pkt = &c->input;
 	if (is_client_packet_complete(pkt))
 		return true;
-	size_t count = sizeof(ClientPacket) - pkt->off;
+	if (!server_recv_packet_header(c))
+		return false;
+	size_t count = packet_size(&pkt->pkt) - pkt->off;
 	ssize_t len = recv(c->socket, ((char *)&pkt->pkt) + pkt->off, count, 0);
 	switch (len) {
 	case -1:
@@ -95,8 +119,8 @@ static bool server_send_packet(Client *c) {
 	ServerPacketState *pkt = &c->output;
 	if (is_server_packet_complete(pkt))
 		return true;
-	size_t count = pkt->pkt->len - pkt->off;
-	ssize_t len = send(c->socket, pkt->pkt->buf + pkt->off, count, 0);
+	size_t count = packet_size(pkt->pkt) - pkt->off;
+	ssize_t len = send(c->socket, (char*)pkt->pkt + pkt->off, count, 0);
 	switch (len) {
 	case -1:
 		if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR) {
@@ -138,7 +162,7 @@ static bool server_queue_empty() {
 	return server.queue_count == 0;
 }
 
-static bool server_queue_packet(ClientPacket *pkt) {
+static bool server_queue_packet(Packet *pkt) {
 	if (server.queue_count >= countof(server.queue))
 		return false;
 	server.queue[server.queue_insert] = *pkt;
@@ -148,7 +172,7 @@ static bool server_queue_packet(ClientPacket *pkt) {
 	return true;
 }
 
-static ClientPacket *server_peek_packet() {
+static Packet *server_peek_packet() {
 	return &server.queue[server.queue_remove];
 }
 

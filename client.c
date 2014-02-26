@@ -40,9 +40,10 @@ static ssize_t read_all(int fd, char *buf, size_t len) {
 	return ret;
 }
 
-static bool client_send_packet(ClientPacket *pkt) {
-	print_client_packet("client-send:", pkt);
-	if (write_all(server.socket, (char *)pkt, sizeof(ClientPacket)) != sizeof(ClientPacket)) {
+static bool client_send_packet(Packet *pkt) {
+	print_packet("client-send:", pkt);
+	size_t size = packet_size(pkt);
+	if (write_all(server.socket, (char *)pkt, size) != size) {
 		debug("FAILED\n");
 		server.running = false;
 		return false;
@@ -50,15 +51,19 @@ static bool client_send_packet(ClientPacket *pkt) {
 	return true;
 }
 
-static bool client_recv_packet(ServerPacket *pkt) {
-	ssize_t len = pkt->len = read_all(server.socket, pkt->buf, sizeof(pkt->buf));
-	print_server_packet("client-recv:", pkt);
-	if (len <= 0) {
-		debug("FAILED\n");
-		server.running = false;
-		return false;
-	}
+static bool client_recv_packet(Packet *pkt) {
+	ssize_t len = read_all(server.socket, (char*)pkt, packet_header_size());
+	if (len <= 0 || len != packet_header_size() || pkt->len == 0)
+		goto error;
+	len = read_all(server.socket, pkt->u.msg, pkt->len);
+	print_packet("client-recv:", pkt);
+	if (len <= 0 || len != pkt->len)
+		goto error;
 	return true;
+error:
+	debug("FAILED here\n");
+	server.running = false;
+	return false;
 }
 
 static void client_clear_screen() {
@@ -88,7 +93,7 @@ static int client_mainloop() {
 		if (client.need_resize) {
 			struct winsize ws;
 			if (ioctl(0, TIOCGWINSZ, &ws) != -1) {
-				ClientPacket pkt = {
+				Packet pkt = {
 					.type = MSG_RESIZE,
 					.u = { .ws = ws },
 					.len = sizeof(ws),
@@ -105,13 +110,18 @@ static int client_mainloop() {
 		}
 
 		if (FD_ISSET(server.socket, &fds)) {
-			ServerPacket pkt;
-			if (client_recv_packet(&pkt))
-				write_all(STDOUT_FILENO, pkt.buf, pkt.len);
+			Packet pkt;
+			if (client_recv_packet(&pkt)) {
+				switch (pkt.type) {
+				case MSG_CONTENT:
+					write_all(STDOUT_FILENO, pkt.u.msg, pkt.len);
+					break;
+				}
+			}
 		}
 
 		if (FD_ISSET(STDIN_FILENO, &fds)) {
-			ClientPacket pkt = { .type = MSG_CONTENT };
+			Packet pkt = { .type = MSG_CONTENT };
 			ssize_t len = read(STDIN_FILENO, pkt.u.msg, sizeof(pkt.u.msg));
 			if (len == -1 && errno != EAGAIN && errno != EINTR)
 				die("client-stdin");
@@ -121,6 +131,7 @@ static int client_mainloop() {
 					client.need_resize = true;
 				} else if (pkt.u.msg[0] == KEY_DETACH) {
 					pkt.type = MSG_DETACH;
+					pkt.len = 0;
 					client_send_packet(&pkt);
 					return -1;
 				} else {

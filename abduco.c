@@ -66,30 +66,23 @@ enum PacketType {
 	MSG_REDRAW  = 4,
 };
 
-/* packet sent from client to server */
 typedef struct {
-	unsigned char type;
-	unsigned char len;
+	unsigned int type;
+	size_t len;
 	union {
-		char msg[sizeof(struct winsize)];
+		char msg[BUFSIZ];
 		struct winsize ws;
 		int i;
 	} u;
-} ClientPacket;
-
-/* packet sent from server to all clients */
-typedef struct {
-	char buf[BUFSIZ];
-	size_t len;
-} ServerPacket;
+} Packet;
 
 typedef struct {
-	ClientPacket pkt;
+	Packet pkt;
 	size_t off;
 } ClientPacketState;
 
 typedef struct {
-	ServerPacket *pkt;
+	Packet *pkt;
 	size_t off;
 } ServerPacketState;
 
@@ -113,9 +106,9 @@ typedef struct {
 	Client *clients;
 	int client_count;
 	int socket;
-	ServerPacket pty_output;
+	Packet pty_output;
 	ClientPacketState pty_input;
-	ClientPacket queue[10];
+	Packet queue[10];
 	unsigned int queue_count;
 	unsigned int queue_insert;
 	unsigned int queue_remove;
@@ -139,16 +132,24 @@ static int create_socket(const char *name);
 static void die(const char *s);
 static void info(const char *str, ...);
 
+static inline size_t packet_header_size() {
+	return offsetof(Packet, u);
+}
+
+static size_t packet_size(Packet *pkt) {
+	return packet_header_size() + pkt->len;
+}
+
 static bool is_client_packet_complete(ClientPacketState *pkt) {
-	return pkt->off == sizeof pkt->pkt;
+	return pkt->off >= packet_header_size() && pkt->off == packet_size(&pkt->pkt);
 }
 
 static bool is_server_packet_complete(ServerPacketState *pkt) {
-	return pkt->pkt && pkt->off == pkt->pkt->len;
+	return pkt->pkt && pkt->off == packet_size(pkt->pkt);
 }
 
 static bool is_server_packet_nonempty(ServerPacketState *pkt) {
-	return pkt->pkt && pkt->pkt->len > 0; 
+	return pkt->pkt && pkt->pkt->len > 0;
 }
 
 #include "debug.c"
