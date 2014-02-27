@@ -30,6 +30,9 @@ static void print_packet(const char *prefix, Packet *pkt) {
 	case MSG_REDRAW:
 		s = "REDRAW";
 		break;
+	case MSG_EXIT:
+		s = "EXIT";
+		break;
 	}
 
 	if (pkt->type == MSG_CONTENT) {

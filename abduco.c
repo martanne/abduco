@@ -64,6 +64,7 @@ enum PacketType {
 	MSG_DETACH  = 2,
 	MSG_RESIZE  = 3,
 	MSG_REDRAW  = 4,
+	MSG_EXIT    = 5,
 };
 
 typedef struct {
@@ -327,13 +328,14 @@ static bool attach_session(const char *name) {
 	tcsetattr(0, TCSADRAIN, &cur_term);
 
 	client_clear_screen();
-	switch (client_mainloop()) {
-	case -1:
+	int status = client_mainloop();
+	if (status == -1) {
 		info("detached");
-		break;
-	case EIO:
-		info("exited due to I/O errors: %s", strerror(errno));
-		break;
+	} else if (status == -EIO) {
+		info("exited due to I/O errors");
+	} else {
+		info("session terminated with exit status %d", status);
+		exit(status);
 	}
 
 	return true;

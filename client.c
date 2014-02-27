@@ -116,6 +116,8 @@ static int client_mainloop() {
 				case MSG_CONTENT:
 					write_all(STDOUT_FILENO, pkt.u.msg, pkt.len);
 					break;
+				case MSG_EXIT:
+					return pkt.u.i;
 				}
 			}
 		}
@@ -126,6 +128,7 @@ static int client_mainloop() {
 			if (len == -1 && errno != EAGAIN && errno != EINTR)
 				die("client-stdin");
 			if (len > 0) {
+				debug("client-stdin: %c", pkt.u.msg[0]);
 				pkt.len = len;
 				if (pkt.u.msg[0] == KEY_REDRAW) {
 					client.need_resize = true;
@@ -141,5 +144,5 @@ static int client_mainloop() {
 		}
 	}
 
-	return 0;
+	return -EIO;
 }

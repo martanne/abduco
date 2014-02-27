@@ -284,10 +284,20 @@ static void server_mainloop() {
 		}
 
 		if (clients_ready && server.clients) {
-			if (server.running)
+			if (server.running) {
 				FD_SET_MAX(server.pty, &new_readfds, new_fdmax);
-			else
+			} else if (server.exit_status == INT_MAX) {
 				break;
+			} else if (server.exit_status != -1) {
+				Packet pkt = { .type = MSG_EXIT, .len = sizeof(int), .u.i = server.exit_status };
+				server.pty_output = pkt;
+				for (Client *c = server.clients; c; c = c->next) {
+					server_place_packet(c, &server.pty_output);
+					c->last_activity = now;
+					FD_SET_MAX(c->socket, &new_writefds, new_fdmax);
+				}
+				server.exit_status = INT_MAX;
+			}
 		}
 
 		if (FD_ISSET(server.pty, &writefds)) {
