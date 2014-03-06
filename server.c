@@ -277,9 +277,9 @@ static void server_mainloop() {
 				case MSG_ATTACH:
 				case MSG_RESIZE:
 					c->state = STATE_ATTACHED;
-					if (!c->next) /* only update size if this is first connected client */
-						ioctl(server.pty, TIOCSWINSZ, &c->input.pkt.u.ws);
 				case MSG_REDRAW:
+					if (c->input.pkt.type == MSG_REDRAW || c == server.clients)
+						ioctl(server.pty, TIOCSWINSZ, &c->input.pkt.u.ws);
 					kill(-server.pid, SIGWINCH);
 					break;
 				case MSG_DETACH:
