@@ -195,6 +195,18 @@ static void server_mainloop() {
 		fd_set readfds = new_readfds;
 		fd_set writefds = new_writefds;
 
+		if (!server.running && server.exit_status != -1 && server.clients) { /* application terminated */
+			Packet pkt = { .type = MSG_EXIT, .len = sizeof(int), .u.i = server.exit_status };
+			server.pty_output = pkt;
+			time_t now = time(NULL);
+			for (Client *c = server.clients; c; c = c->next) {
+				server_place_packet(c, &server.pty_output);
+				c->last_activity = now;
+				FD_SET_MAX(c->socket, &writefds, fdmax);
+			}
+			server.exit_status = -1;
+		}
+
 		if (select(fdmax+1, &readfds, &writefds, NULL, NULL) == -1) {
 			if (errno == EINTR)
 				continue;
@@ -208,7 +220,7 @@ static void server_mainloop() {
 
 		time_t now = time(NULL);
 		time_t timeout = now - CLIENT_TIMEOUT;
-		bool pty_data = false, clients_ready = true;
+		bool pty_data = false, clients_ready = true, exit_sent = false;
 
 		if (FD_ISSET(server.socket, &readfds))
 			server_accept_client(now);
@@ -275,6 +287,8 @@ static void server_mainloop() {
 					clients_ready = false;
 					FD_SET_MAX(c->socket, &new_writefds, new_fdmax);
 				}
+			} else {
+				exit_sent = (c->output.pkt && c->output.pkt->type == MSG_EXIT);
 			}
 
 			if (c->state != STATE_ATTACHED)
@@ -283,22 +297,8 @@ static void server_mainloop() {
 			c = c->next;
 		}
 
-		if (clients_ready && server.clients) {
-			if (server.running) {
-				FD_SET_MAX(server.pty, &new_readfds, new_fdmax);
-			} else if (server.exit_status == INT_MAX) {
-				break;
-			} else if (server.exit_status != -1) {
-				Packet pkt = { .type = MSG_EXIT, .len = sizeof(int), .u.i = server.exit_status };
-				server.pty_output = pkt;
-				for (Client *c = server.clients; c; c = c->next) {
-					server_place_packet(c, &server.pty_output);
-					c->last_activity = now;
-					FD_SET_MAX(c->socket, &new_writefds, new_fdmax);
-				}
-				server.exit_status = INT_MAX;
-			}
-		}
+		if (clients_ready && server.clients && server.running)
+			FD_SET_MAX(server.pty, &new_readfds, new_fdmax);
 
 		if (FD_ISSET(server.pty, &writefds)) {
 			while (!server_queue_empty()) {
@@ -313,6 +313,9 @@ static void server_mainloop() {
 
 		if (!server_queue_empty())
 			FD_SET_MAX(server.pty, &new_writefds, new_fdmax);
+
+		if (exit_sent)
+			break;
 	}
 
 	exit(EXIT_SUCCESS);
