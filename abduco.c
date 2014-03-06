@@ -163,7 +163,7 @@ static void info(const char *str, ...) {
 	va_start(ap, str);
 	fprintf(stdout, "\e[999H\r\n");
 	if (str) {
-		fprintf(stdout, "%s: ", server.name);
+		fprintf(stdout, "%s: %s: ", server.name, server.session_name);
 		vfprintf(stdout, str, ap);
 		fprintf(stdout, "\r\n");
 	}
