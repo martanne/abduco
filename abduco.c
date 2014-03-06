@@ -161,13 +161,13 @@ static bool is_server_packet_nonempty(ServerPacketState *pkt) {
 static void info(const char *str, ...) {
 	va_list ap;
 	va_start(ap, str);
-	fprintf(stdout, "\e[999H\r\n");
+	fprintf(stderr, "\e[999H");
 	if (str) {
-		fprintf(stdout, "%s: %s: ", server.name, server.session_name);
-		vfprintf(stdout, str, ap);
-		fprintf(stdout, "\r\n");
+		fprintf(stderr, "%s: %s: ", server.name, server.session_name);
+		vfprintf(stderr, str, ap);
+		fprintf(stderr, "\r\n");
 	}
-	fflush(stdout);
+	fflush(stderr);
 	va_end(ap);
 }
 
