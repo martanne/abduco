@@ -1,2 +1,2 @@
-static char KEY_DETACH = CTRL('q');
-static char KEY_REDRAW = CTRL('L');
+static char KEY_DETACH = CTRL('\\');
+static char KEY_REDRAW = 0;
