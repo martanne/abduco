@@ -119,6 +119,7 @@ typedef struct {
 	pid_t pid;
 	volatile sig_atomic_t running;
 	const char *name;
+	const char *session_name;
 } Server;
 
 static Server server = { .running = true, .exit_status = -1 };
@@ -210,23 +211,14 @@ static int create_socket(const char *name) {
 
 static bool create_session(const char *name, char * const argv[]) {
 	int pipefds[2];
-	if (pipe(pipefds) == -1)
-		return false;
-	if ((server.socket = create_socket(name)) == -1)
-		return false;
-	socklen_t socklen = offsetof(struct sockaddr_un, sun_path) + strlen(sockaddr.sun_path) + 1;
-	mode_t mode = S_IRUSR|S_IWUSR;
-	fchmod(server.socket, mode); 
-	if (bind(server.socket, (struct sockaddr*)&sockaddr, socklen) == -1)
-		return false;
-	if (listen(server.socket, 5) == -1)
-		goto error;
-	if (fchmod(server.socket, mode) == -1 && chmod(sockaddr.sun_path, mode) == -1)
-		goto error;
-
 	pid_t pid;
 	char errormsg[255];
 	struct sigaction sa;
+
+	if (pipe(pipefds) == -1)
+		return false;
+	if ((server.socket = server_create_socket(name)) == -1)
+		return false;
 
 	switch ((pid = fork())) {
 	case 0: /* child process */
@@ -256,6 +248,8 @@ static bool create_session(const char *name, char * const argv[]) {
 				sa.sa_handler = server_sigterm_handler;
 				sigaction(SIGTERM, &sa, NULL);
 				sigaction(SIGINT, &sa, NULL);
+				sa.sa_handler = server_sigusr1_handler;
+				sigaction(SIGUSR1, &sa, NULL);
 				sa.sa_handler = SIG_IGN;
 				sigaction(SIGPIPE, &sa, NULL);
 				sigaction(SIGHUP, &sa, NULL);
@@ -291,9 +285,6 @@ static bool create_session(const char *name, char * const argv[]) {
 		close(pipefds[0]);
 	}
 	return true;
-error:
-	unlink(sockaddr.sun_path);
-	return false;
 }
 
 static bool attach_session(const char *name) {
@@ -376,21 +367,21 @@ static int list_session() {
 }
 
 int main(int argc, char *argv[]) {
-	char *session = NULL, **cmd = NULL, action = '\0';
+	char **cmd = NULL, action = '\0';
 	server.name = basename(argv[0]);
 	if (argc == 1)
 		exit(list_session());
 	for (int arg = 1; arg < argc; arg++) {
 		if (argv[arg][0] != '-') {
-			if (!session) {
-				session = argv[arg];
+			if (!server.session_name) {
+				server.session_name = argv[arg];
 				continue;
 			} else if (!cmd) {
 				cmd = &argv[arg];
 				break;
 			}
 		}
-		if (session)
+		if (server.session_name)
 			usage();
 		switch (argv[arg][1]) {
 		case 'a':
@@ -415,7 +406,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	if (!action || !session || (action != 'a' && !cmd))
+	if (!action || !server.session_name || (action != 'a' && !cmd))
 		usage();
 
 	if (tcgetattr(STDIN_FILENO, &orig_term) != -1) {
@@ -427,13 +418,13 @@ int main(int argc, char *argv[]) {
 	redo:
 	case 'n':
 	case 'c':
-		if (!create_session(session, cmd))
+		if (!create_session(server.session_name, cmd))
 			die("create-session");
 		if (action == 'n')
 			break;
 	case 'a':
 	case 'A':
-		if (!attach_session(session)) {
+		if (!attach_session(server.session_name)) {
 			if (action == 'A') {
 				action = 'c';
 				goto redo;

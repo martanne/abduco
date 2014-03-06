@@ -18,6 +18,26 @@ static void client_free(Client *c) {
 	free(c);
 }
 
+static int server_create_socket(const char *name) {
+	int socket = create_socket(name);
+	if (socket == -1)
+		return -1;
+	socklen_t socklen = offsetof(struct sockaddr_un, sun_path) + strlen(sockaddr.sun_path) + 1;
+	mode_t mode = S_IRUSR|S_IWUSR;
+	fchmod(socket, mode);
+	if (bind(socket, (struct sockaddr*)&sockaddr, socklen) == -1)
+		return -1;
+	if (fchmod(socket, mode) == -1 && chmod(sockaddr.sun_path, mode) == -1)
+		goto error;
+	if (listen(socket, 5) == -1)
+		goto error;
+	debug("old: %d new: %d\n", server.socket, socket);
+	return socket;
+error:
+	unlink(sockaddr.sun_path);
+	return -1;
+}
+
 static int server_set_socket_non_blocking(int sock) {
 	int flags;
 	if ((flags = fcntl(sock, F_GETFL, 0)) == -1)
@@ -154,6 +174,15 @@ static void server_sigterm_handler(int sig) {
 	exit(EXIT_FAILURE); /* invoke atexit handler */
 }
 
+static void server_sigusr1_handler(int sig) {
+	int socket = server_create_socket(server.session_name);
+	if (socket != -1) {
+		if (server.socket)
+			close(server.socket);
+		server.socket = socket;
+	}
+}
+
 static void server_atexit_handler() {
 	unlink(sockaddr.sun_path);
 }
@@ -194,6 +223,7 @@ static void server_mainloop() {
 		int fdmax = new_fdmax;
 		fd_set readfds = new_readfds;
 		fd_set writefds = new_writefds;
+		FD_SET_MAX(server.socket, &readfds, fdmax);
 
 		if (!server.running && server.exit_status != -1 && server.clients) { /* application terminated */
 			Packet pkt = { .type = MSG_EXIT, .len = sizeof(int), .u.i = server.exit_status };
@@ -214,7 +244,6 @@ static void server_mainloop() {
 		}
 
 		FD_ZERO(&new_readfds);
-		FD_SET(server.socket, &new_readfds);
 		FD_ZERO(&new_writefds);
 		new_fdmax = server.socket;
 
