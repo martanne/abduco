@@ -225,10 +225,8 @@ static void server_mainloop() {
 		if (FD_ISSET(server.socket, &readfds))
 			server_accept_client(now);
 
-		if (FD_ISSET(server.pty, &readfds)) {
+		if (FD_ISSET(server.pty, &readfds))
 			pty_data = server_read_pty(&server.pty_output);
-			clients_ready = !pty_data;
-		}
 
 		for (Client **prev_next = &server.clients, *c = server.clients; c;) {
 			if (c->state == STATE_DISCONNECTED) {
@@ -297,7 +295,7 @@ static void server_mainloop() {
 			c = c->next;
 		}
 
-		if (clients_ready && server.clients && server.running)
+		if (server.running && clients_ready)
 			FD_SET_MAX(server.pty, &new_readfds, new_fdmax);
 
 		if (FD_ISSET(server.pty, &writefds)) {
