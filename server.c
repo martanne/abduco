@@ -18,6 +18,18 @@ static void client_free(Client *c) {
 	free(c);
 }
 
+static int server_mark_socket_exec(bool exec) {
+	struct stat sb;
+	if (stat(sockaddr.sun_path, &sb) == -1)
+		return -1;
+	mode_t mode = sb.st_mode;
+	if (exec)
+		mode |= S_IXUSR;
+	else
+		mode &= ~S_IXUSR;
+	return chmod(sockaddr.sun_path, mode);
+}
+
 static int server_create_socket(const char *name) {
 	int socket = create_socket(name);
 	if (socket == -1)
@@ -52,6 +64,8 @@ static Client *server_accept_client(time_t now) {
 	Client *c = client_malloc(newfd);
 	if (!c)
 		return NULL;
+	if (!server.clients)
+		server_mark_socket_exec(true);
 	server_set_socket_non_blocking(newfd);
 	c->socket = newfd;
 	c->state = STATE_CONNECTED;
@@ -262,7 +276,8 @@ static void server_mainloop() {
 				Client *t = c->next;
 				client_free(c);
 				*prev_next = c = t;
-				server.client_count--;
+				if (--server.client_count == 0)
+					server_mark_socket_exec(false);
 				continue;
 			}
 
