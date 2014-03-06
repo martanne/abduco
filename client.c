@@ -66,11 +66,6 @@ error:
 	return false;
 }
 
-static void client_clear_screen() {
-	printf("\e[H\e[J");
-	fflush(stdout);
-}
-
 static void client_show_cursor() {
 	printf("\e[?25h");
 	fflush(stdout);

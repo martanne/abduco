@@ -318,7 +318,6 @@ static bool attach_session(const char *name) {
 	cur_term.c_cc[VTIME] = 0;
 	tcsetattr(0, TCSADRAIN, &cur_term);
 
-	client_clear_screen();
 	int status = client_mainloop();
 	if (status == -1) {
 		info("detached");
