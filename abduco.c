@@ -414,7 +414,13 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	if (!action || !server.session_name || (action != 'a' && !cmd))
+	if (!cmd) {
+		cmd = (char*[]){ getenv("ABDUCO_CMD"), NULL };
+		if (!cmd[0])
+			cmd[0] = "dvtm";
+	}
+
+	if (!action || !server.session_name)
 		usage();
 
 	if (tcgetattr(STDIN_FILENO, &orig_term) != -1) {
