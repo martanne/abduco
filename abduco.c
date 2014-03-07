@@ -198,9 +198,16 @@ static int create_socket_dir() {
 
 static int create_socket(const char *name) {
 	size_t maxlen = sizeof(sockaddr.sun_path);
-	if (name[0] == '.' || name[0] == '/') {
+	if (name[0] == '/') {
 		strncpy(sockaddr.sun_path, name, maxlen);
 		if (sockaddr.sun_path[maxlen-1])
+			return -1;
+	} else if (name[0] == '.') {
+		char buf[maxlen], *cwd = getcwd(buf, sizeof buf);
+		if (!cwd)
+			return -1;
+		int len = snprintf(sockaddr.sun_path, maxlen, "%s/%s", cwd, name);
+		if (len < 0 || (size_t)len >= maxlen)
 			return -1;
 	} else {
 		int len = create_socket_dir(), rem = strlen(name);
