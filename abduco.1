@@ -35,20 +35,41 @@ abduco
 .br
 .SH DESCRIPTION
 .B abduco
-provides a way to disconnect a given application from it's controlling
+provides a way to disconnect a given application from its controlling
 terminal thus it provides roughly the same session attach/detach support as
 .BR screen(1) , " tmux(1)" " or" " dtach(1)".
 
+If the
+.BR command
+to execute is not specified, the environment variable
+.BR $ABDUCO_CMD
+is checked, if it is not set
+.BR dvtm(1)
+is executed.
+
 By default all session related information is stored in 
 .B $HOME/.abduco
-or as a fallback in 
-.BR /tmp/.abduco .
+with
+.BR $TMPDIR/.abduco
+as a fallback and
+.BR /tmp/.abduco
+as a last resort.
+
 However if a given session name starts either with a dot or a forward slash
 it is interpreted as a path name and used unmodified i.e. relatively to the
 current working directory.
+
+If for some reason the
+.BR unix(7)
+domain socket representing a session is deleted, sending
+.BR SIGUSR1
+to the server process will recreate it.
 .SH OPTIONS
 If no command line arguments are given all currently active sessions are
-printed together with their respective creation date.
+printed sorted by their respective creation date. Lines starting with an
+asterik
+.BR *
+indicate that at least one client is connected.
 .TP
 .B \-v
 Print version information to standard output and exit.
@@ -60,7 +81,7 @@ Set the key to detach which by default is set to CTRL+\\ i.e. ^\\ to detachkey.
 Create a new session and attach immediately to it.
 .TP
 .BI \-n
-Create a new session but don't attach to it.
+Create a new session but do not attach to it.
 .TP
 .BI \-A
 Try to connect to an existing session, upon failure create said session and attach immediately to it.
