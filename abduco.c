@@ -185,6 +185,8 @@ static int create_socket_dir() {
 	size_t maxlen = sizeof(sockaddr.sun_path);
 	char *dir = getenv("HOME");
 	if (!dir)
+		dir = getenv("TMPDIR");
+	if (!dir)
 		dir = "/tmp";
 	int len = snprintf(sockaddr.sun_path, maxlen, "%s/.%s/", dir, server.name);
 	if (len < 0 || (size_t)len >= maxlen)
