@@ -328,6 +328,7 @@ static bool attach_session(const char *name) {
 	tcsetattr(0, TCSADRAIN, &cur_term);
 
 	int status = client_mainloop();
+	client_restore_terminal();
 	if (status == -1) {
 		info("detached");
 	} else if (status == -EIO) {
