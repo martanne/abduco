@@ -70,7 +70,6 @@ static Client *server_accept_client() {
 	c->state = STATE_CONNECTED;
 	c->next = server.clients;
 	server.clients = c;
-	server.client_count++;
 	return c;
 }
 
@@ -188,11 +187,16 @@ static void server_mainloop() {
 
 		for (Client **prev_next = &server.clients, *c = server.clients; c;) {
 			if (c->state == STATE_DISCONNECTED) {
+				bool first = (c == server.clients);
 				Client *t = c->next;
 				client_free(c);
 				*prev_next = c = t;
-				if (--server.client_count == 0)
+				if (first && server.clients) {
+					Packet pkt = { .type = MSG_RESIZE, .len = 0 };
+					server_send_packet(server.clients, &pkt);
+				} else if (!server.clients) {
 					server_mark_socket_exec(false);
+				}
 				continue;
 			}
 

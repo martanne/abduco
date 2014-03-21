@@ -68,6 +68,9 @@ static int client_mainloop() {
 				case MSG_CONTENT:
 					write_all(STDOUT_FILENO, pkt.u.msg, pkt.len);
 					break;
+				case MSG_RESIZE:
+					client.need_resize = true;
+					break;
 				case MSG_EXIT:
 					return pkt.u.i;
 				}

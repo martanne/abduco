@@ -92,7 +92,6 @@ struct Client {
 
 typedef struct { 
 	Client *clients;
-	int client_count;
 	int socket;
 	Packet pty_output;
 	int pty;
