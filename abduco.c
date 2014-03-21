@@ -77,20 +77,8 @@ typedef struct {
 	} u;
 } Packet;
 
-typedef struct {
-	Packet pkt;
-	size_t off;
-} ClientPacketState;
-
-typedef struct {
-	Packet *pkt;
-	size_t off;
-} ServerPacketState;
-
 typedef struct Client Client;
 struct Client {
-	ServerPacketState output; /* display output as received from server */
-	ClientPacketState input; /* input as sent to the server */
 	int socket;
 	enum {
 		STATE_CONNECTED,
@@ -98,7 +86,6 @@ struct Client {
 		STATE_DETACHED,
 		STATE_DISCONNECTED,
 	} state;
-	time_t last_activity;
 	bool need_resize;
 	Client *next;
 };
@@ -108,11 +95,6 @@ typedef struct {
 	int client_count;
 	int socket;
 	Packet pty_output;
-	ClientPacketState pty_input;
-	Packet queue[10];
-	unsigned int queue_count;
-	unsigned int queue_insert;
-	unsigned int queue_remove;
 	int pty;
 	int exit_status;
 	struct termios term;
@@ -134,6 +116,8 @@ static int create_socket(const char *name);
 static void die(const char *s);
 static void info(const char *str, ...);
 
+#include "debug.c"
+
 static inline size_t packet_header_size() {
 	return offsetof(Packet, u);
 }
@@ -142,19 +126,61 @@ static size_t packet_size(Packet *pkt) {
 	return packet_header_size() + pkt->len;
 }
 
-static bool is_client_packet_complete(ClientPacketState *pkt) {
-	return pkt->off >= packet_header_size() && pkt->off == packet_size(&pkt->pkt);
+static ssize_t write_all(int fd, const char *buf, size_t len) {
+	debug("write_all(%d)\n", len);
+	ssize_t ret = len;
+	while (len > 0) {
+		ssize_t res = write(fd, buf, len);
+		if (res < 0) {
+			if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)
+				continue;
+			return -1;
+		}
+		if (res == 0)
+			return ret - len;
+		buf += res;
+		len -= res;
+	}
+	return ret;
 }
 
-static bool is_server_packet_complete(ServerPacketState *pkt) {
-	return pkt->pkt && pkt->off == packet_size(pkt->pkt);
+static ssize_t read_all(int fd, char *buf, size_t len) {
+	debug("read_all(%d)\n", len);
+	ssize_t ret = len;
+	while (len > 0) {
+		ssize_t res = read(fd, buf, len);
+		if (res < 0) {
+			if (errno == EWOULDBLOCK)
+				return ret - len;
+			if (errno == EAGAIN || errno == EINTR)
+				continue;
+			return -1;
+		}
+		if (res == 0)
+			return ret - len;
+		buf += res;
+		len -= res;
+	}
+	return ret;
 }
 
-static bool is_server_packet_nonempty(ServerPacketState *pkt) {
-	return pkt->pkt && pkt->pkt->len > 0;
+static bool send_packet(int socket, Packet *pkt) {
+	size_t size = packet_size(pkt);
+	return write_all(socket, (char *)pkt, size) == size;
 }
 
-#include "debug.c"
+static bool recv_packet(int socket, Packet *pkt) {
+	ssize_t len = read_all(socket, (char*)pkt, packet_header_size());
+	if (len <= 0 || len != packet_header_size())
+		return false;
+	if (pkt->len > 0) {
+		len = read_all(socket, pkt->u.msg, pkt->len);
+		if (len <= 0 || len != pkt->len)
+			return false;
+	}
+	return true;
+}
+
 #include "client.c"
 #include "server.c"
 

@@ -4,64 +4,21 @@ static void client_sigwinch_handler(int sig) {
 	client.need_resize = true;
 }
 
-static ssize_t write_all(int fd, const char *buf, size_t len) {
-	ssize_t ret = len;
-	while (len > 0) {
-		ssize_t res = write(fd, buf, len);
-		if (res < 0) {
-			if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)
-				continue;
-			return -1;
-		}
-		if (res == 0)
-			return ret - len;
-		buf += res;
-		len -= res;
-	}
-	return ret;
-}
-
-static ssize_t read_all(int fd, char *buf, size_t len) {
-	ssize_t ret = len;
-	while (len > 0) {
-		ssize_t res = read(fd, buf, len);
-		if (res < 0) {
-			if (errno == EWOULDBLOCK)
-				return ret - len;
-			if (errno == EAGAIN || errno == EINTR)
-				continue;
-			return -1;
-		}
-		if (res == 0)
-			return ret - len;
-		buf += res;
-		len -= res;
-	}
-	return ret;
-}
-
 static bool client_send_packet(Packet *pkt) {
 	print_packet("client-send:", pkt);
-	size_t size = packet_size(pkt);
-	if (write_all(server.socket, (char *)pkt, size) != size) {
-		debug("FAILED\n");
-		server.running = false;
-		return false;
-	}
-	return true;
+	if (send_packet(server.socket, pkt))
+		return true;
+	debug("FAILED\n");
+	server.running = false;
+	return false;
 }
 
 static bool client_recv_packet(Packet *pkt) {
-	ssize_t len = read_all(server.socket, (char*)pkt, packet_header_size());
-	if (len <= 0 || len != packet_header_size() || pkt->len == 0)
-		goto error;
-	len = read_all(server.socket, pkt->u.msg, pkt->len);
-	print_packet("client-recv:", pkt);
-	if (len <= 0 || len != pkt->len)
-		goto error;
-	return true;
-error:
-	debug("FAILED here\n");
+	if (recv_packet(server.socket, pkt)) {
+		print_packet("client-recv:", pkt);
+		return true;
+	}
+	debug("client-recv: FAILED\n");
 	server.running = false;
 	return false;
 }
@@ -123,7 +80,7 @@ static int client_mainloop() {
 			if (len == -1 && errno != EAGAIN && errno != EINTR)
 				die("client-stdin");
 			if (len > 0) {
-				debug("client-stdin: %c", pkt.u.msg[0]);
+				debug("client-stdin: %c\n", pkt.u.msg[0]);
 				pkt.len = len;
 				if (pkt.u.msg[0] == KEY_REDRAW) {
 					client.need_resize = true;

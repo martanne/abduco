@@ -1,8 +1,6 @@
 #ifdef NDEBUG
 static void debug(const char *errstr, ...) { }
 static void print_packet(const char *prefix, Packet *pkt) { }
-static void print_client_packet_state(const char *prefix, ClientPacketState *pkt) { }
-static void print_server_packet_state(const char *prefix, ServerPacketState *pkt) { }
 #else
 
 static void debug(const char *errstr, ...) {
@@ -13,6 +11,7 @@ static void debug(const char *errstr, ...) {
 }
 
 static void print_packet(const char *prefix, Packet *pkt) {
+	// XXX: look up table
 	char *s = "UNKNOWN";
 	switch (pkt->type) {
 	case MSG_CONTENT:
@@ -40,21 +39,11 @@ static void print_packet(const char *prefix, Packet *pkt) {
 		for (size_t i = 0; i < pkt->len && i < sizeof(pkt->u.msg); i++)
 			fprintf(stderr, "%c", pkt->u.msg[i]);
 		fprintf(stderr, "\n");
+	} else if (pkt->type == MSG_RESIZE) {
+		fprintf(stderr, "%s %s %d x %d\n", prefix, s, pkt->u.ws.ws_col, pkt->u.ws.ws_row);
 	} else {
 		fprintf(stderr, "%s %s len: %d\n", prefix, s, pkt->len);
 	}
-}
-
-static void print_client_packet_state(const char *prefix, ClientPacketState *pkt) {
-	fprintf(stderr, "%s %d/%d\n", prefix, pkt->off, packet_size(&pkt->pkt));
-	if (is_client_packet_complete(pkt))
-		print_packet(prefix, &pkt->pkt);
-}
-
-static void print_server_packet_state(const char *prefix, ServerPacketState *pkt) {
-	fprintf(stderr, "%s %d/%d\n", prefix, pkt->off, packet_size(pkt->pkt));
-	if (is_server_packet_complete(pkt))
-		print_packet(prefix, pkt->pkt);
 }
 
 #endif /* NDEBUG */
