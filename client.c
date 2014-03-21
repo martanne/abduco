@@ -30,7 +30,7 @@ static void client_show_cursor() {
 
 static void client_restore_terminal() {
 	if (has_term)
-		tcsetattr(0, TCSADRAIN, &orig_term);
+		tcsetattr(STDIN_FILENO, TCSADRAIN, &orig_term);
 	client_show_cursor();
 }
 
@@ -44,7 +44,7 @@ static int client_mainloop() {
 
 		if (client.need_resize) {
 			struct winsize ws;
-			if (ioctl(0, TIOCGWINSZ, &ws) != -1) {
+			if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) != -1) {
 				Packet pkt = {
 					.type = MSG_RESIZE,
 					.u = { .ws = ws },

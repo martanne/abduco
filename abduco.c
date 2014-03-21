@@ -350,7 +350,7 @@ static bool attach_session(const char *name) {
 	cur_term.c_cc[VLNEXT] = _POSIX_VDISABLE;
 	cur_term.c_cc[VMIN] = 1;
 	cur_term.c_cc[VTIME] = 0;
-	tcsetattr(0, TCSADRAIN, &cur_term);
+	tcsetattr(STDIN_FILENO, TCSADRAIN, &cur_term);
 
 	int status = client_mainloop();
 	client_restore_terminal();
