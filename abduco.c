@@ -55,7 +55,7 @@
 #ifdef _AIX
 # include "forkpty-aix.c"
 #endif
-#define CLIENT_TIMEOUT 100
+
 #define countof(arr) (sizeof(arr) / sizeof((arr)[0]))
 
 enum PacketType {
