@@ -180,7 +180,11 @@ static void server_mainloop() {
 			pty_data = server_read_pty(&server_packet);
 
 		if (!server.running && server.exit_status != -1 && server.clients) { /* application terminated */
-			Packet pkt = { .type = MSG_EXIT, .len = sizeof(int), .u.i = server.exit_status };
+			Packet pkt = {
+				.type = MSG_EXIT,
+				.u.i = server.exit_status,
+				.len = sizeof(pkt.u.i),
+			};
 			exit_pkt = &pkt;
 			server.exit_status = -1;
 		}
@@ -192,7 +196,10 @@ static void server_mainloop() {
 				client_free(c);
 				*prev_next = c = t;
 				if (first && server.clients) {
-					Packet pkt = { .type = MSG_RESIZE, .len = 0 };
+					Packet pkt = {
+						.type = MSG_RESIZE,
+						.len = 0,
+					};
 					server_send_packet(server.clients, &pkt);
 				} else if (!server.clients) {
 					server_mark_socket_exec(false);

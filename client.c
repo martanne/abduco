@@ -34,8 +34,13 @@ static void client_restore_terminal() {
 
 static int client_mainloop() {
 	client.need_resize = true;
-	Packet pkt = { .type = MSG_ATTACH, .u = { .b = client.readonly }, .len = sizeof(pkt.u.b) };
+	Packet pkt = {
+		.type = MSG_ATTACH,
+		.u = { .b = client.readonly },
+		.len = sizeof(pkt.u.b),
+	};
 	client_send_packet(&pkt);
+
 	while (server.running) {
 		fd_set fds;
 		FD_ZERO(&fds);
