@@ -74,6 +74,7 @@ typedef struct {
 		char msg[BUFSIZ];
 		struct winsize ws;
 		int i;
+		bool b;
 	} u;
 } Packet;
 
@@ -87,6 +88,7 @@ struct Client {
 		STATE_DISCONNECTED,
 	} state;
 	bool need_resize;
+	bool readonly;
 	Client *next;
 };
 
@@ -104,6 +106,7 @@ typedef struct {
 } Server;
 
 static Server server = { .running = true, .exit_status = -1 };
+static Client client;
 static struct termios orig_term, cur_term;
 bool has_term;
 
@@ -202,7 +205,7 @@ static void die(const char *s) {
 }
 
 static void usage() {
-	fprintf(stderr, "usage: abduco [-a|-A|-c|-n] [-e detachkey] name command\n");
+	fprintf(stderr, "usage: abduco [-a|-A|-c|-n] [-r] [-e detachkey] name command\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -432,6 +435,9 @@ int main(int argc, char *argv[]) {
 				*esc = CTRL(esc[1]);
 			KEY_DETACH = *esc;
 			break;
+		case 'r':
+			client.readonly = true;
+			break;
 		case 'v':
 			puts("abduco-"VERSION" © 2013-2014 Marc André Tanner");
 			exit(EXIT_SUCCESS);
@@ -446,7 +452,7 @@ int main(int argc, char *argv[]) {
 			cmd[0] = "dvtm";
 	}
 
-	if (!action || !server.session_name)
+	if (!action || !server.session_name || ((action == 'c' || action == 'A') && client.readonly))
 		usage();
 
 	if (tcgetattr(STDIN_FILENO, &orig_term) != -1) {

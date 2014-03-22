@@ -206,10 +206,12 @@ static void server_mainloop() {
 					server_write_pty(&client_packet);
 					break;
 				case MSG_ATTACH:
+					c->readonly = client_packet.u.b;
+					break;
 				case MSG_RESIZE:
 					c->state = STATE_ATTACHED;
 				case MSG_REDRAW:
-					if (client_packet.type == MSG_REDRAW || c == server.clients) {
+					if (!c->readonly && (client_packet.type == MSG_REDRAW || c == server.clients)) {
 						debug("server-ioct: TIOCSWINSZ\n");
 						ioctl(server.pty, TIOCSWINSZ, &client_packet.u.ws);
 					}

@@ -12,6 +12,7 @@ abduco
 .RI [ args \ ... "" ]
 .br
 .B abduco
+.RB [ \-r ]
 .RB [ \-e 
 .IR detachkey ]
 .RB \-n 
@@ -28,6 +29,7 @@ abduco
 .RI [ args \ ... "" ]
 .br
 .B abduco
+.RB [ \-r ]
 .RB [ \-e 
 .IR detachkey ]
 .RB \-a
@@ -73,6 +75,9 @@ indicate that at least one client is connected.
 .TP
 .B \-v
 Print version information to standard output and exit.
+.TP
+.B \-r
+Readonly session, i.e. no user input is ignored.
 .TP
 .BI \-e \ detachkey
 Set the key to detach which by default is set to CTRL+\\ i.e. ^\\ to detachkey.

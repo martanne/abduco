@@ -1,5 +1,3 @@
-static Client client;
-
 static void client_sigwinch_handler(int sig) {
 	client.need_resize = true;
 }
@@ -36,6 +34,8 @@ static void client_restore_terminal() {
 
 static int client_mainloop() {
 	client.need_resize = true;
+	Packet pkt = { .type = MSG_ATTACH, .u = { .b = client.readonly }, .len = sizeof(pkt.u.b) };
+	client_send_packet(&pkt);
 	while (server.running) {
 		fd_set fds;
 		FD_ZERO(&fds);
@@ -92,7 +92,7 @@ static int client_mainloop() {
 					pkt.len = 0;
 					client_send_packet(&pkt);
 					return -1;
-				} else {
+				} else if (!client.readonly) {
 					client_send_packet(&pkt);
 				}
 			}
