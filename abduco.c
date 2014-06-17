@@ -104,6 +104,7 @@ typedef struct {
 	volatile sig_atomic_t running;
 	const char *name;
 	const char *session_name;
+	bool read_pty;
 } Server;
 
 static Server server = { .running = true, .exit_status = -1 };
@@ -464,6 +465,8 @@ int main(int argc, char *argv[]) {
 		server.term = orig_term;
 		has_term = true;
 	}
+
+	server.read_pty = (action == 'n');
 
 	switch (action) {
 	redo:

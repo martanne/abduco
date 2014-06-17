@@ -70,6 +70,7 @@ static Client *server_accept_client() {
 	c->state = STATE_CONNECTED;
 	c->next = server.clients;
 	server.clients = c;
+	server.read_pty = true;
 	return c;
 }
 
@@ -151,6 +152,8 @@ static void server_mainloop() {
 	FD_ZERO(&new_writefds);
 	FD_SET(server.socket, &new_readfds);
 	int new_fdmax = server.socket;
+	if (server.read_pty)
+		FD_SET_MAX(server.pty, &new_readfds, new_fdmax);
 	Packet *exit_pkt = NULL;
 
 	while (!exit_pkt) {
@@ -243,7 +246,7 @@ static void server_mainloop() {
 			c = c->next;
 		}
 
-		if (server.running)
+		if (server.running && server.read_pty)
 			FD_SET_MAX(server.pty, &new_readfds, new_fdmax);
 	}
 
