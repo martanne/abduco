@@ -22,6 +22,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <signal.h>
+#include <poll.h>
 #include <libgen.h>
 #include <string.h>
 #include <limits.h>
@@ -298,6 +299,9 @@ static bool create_session(const char *name, char * const argv[]) {
 				dup2(fd, 2);
 			#endif /* NDEBUG */
 				close(pipefds[1]);
+				struct pollfd pipe_status = { .fd = pipefds[0], .events = POLLIN };
+				if (poll(&pipe_status, 1, -1) == 1 && pipe_status.revents == POLLHUP)
+					exit(EXIT_FAILURE);
 				server_mainloop();
 				break;
 			}
@@ -314,8 +318,9 @@ static bool create_session(const char *name, char * const argv[]) {
 		close(pipefds[1]);
 		int status;
 		wait(&status); /* wait for first fork */
-		if ((status = read_all(pipefds[0], errormsg, sizeof(errormsg))) > 0) {
-			write_all(STDERR_FILENO, errormsg, status);
+		ssize_t len = read_all(pipefds[0], errormsg, sizeof(errormsg));
+		if (len > 0) {
+			write_all(STDERR_FILENO, errormsg, len);
 			unlink(sockaddr.sun_path);
 			exit(EXIT_FAILURE);
 		}
