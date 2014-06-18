@@ -401,7 +401,12 @@ static int list_session() {
 		struct stat sb; char buf[255];
 		if (stat(namelist[n]->d_name, &sb) == 0) {
 			strftime(buf, sizeof(buf), "%a%t %F %T", localtime(&sb.st_atime));
-			printf("%c %s\t%s\n", sb.st_mode & S_IXUSR ? '*' : ' ', buf, namelist[n]->d_name);
+			char status = ' ';
+			if (sb.st_mode & S_IXUSR)
+				status = '*';
+			else if (sb.st_mode & S_IXGRP)
+				status = '+';
+			printf("%c %s\t%s\n", status, buf, namelist[n]->d_name);
 		}
 		free(namelist[n]);
 	}
