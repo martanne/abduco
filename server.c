@@ -152,11 +152,12 @@ static void server_mainloop() {
 	FD_ZERO(&new_writefds);
 	FD_SET(server.socket, &new_readfds);
 	int new_fdmax = server.socket;
+	bool exit_packet_delivered = false;
+
 	if (server.read_pty)
 		FD_SET_MAX(server.pty, &new_readfds, new_fdmax);
-	Packet *exit_pkt = NULL;
 
-	while (!exit_pkt) {
+	while (server.clients || !exit_packet_delivered) {
 		int fdmax = new_fdmax;
 		fd_set readfds = new_readfds;
 		fd_set writefds = new_writefds;
@@ -181,16 +182,6 @@ static void server_mainloop() {
 
 		if (FD_ISSET(server.pty, &readfds))
 			pty_data = server_read_pty(&server_packet);
-
-		if (!server.running && server.exit_status != -1 && server.clients) { /* application terminated */
-			Packet pkt = {
-				.type = MSG_EXIT,
-				.u.i = server.exit_status,
-				.len = sizeof(pkt.u.i),
-			};
-			exit_pkt = &pkt;
-			server.exit_status = -1;
-		}
 
 		for (Client **prev_next = &server.clients, *c = server.clients; c;) {
 			if (c->state == STATE_DISCONNECTED) {
@@ -239,9 +230,21 @@ static void server_mainloop() {
 
 			if (pty_data)
 				server_send_packet(c, &server_packet);
-			if (exit_pkt)
-				server_send_packet(c, exit_pkt);
-
+			if (!server.running) {
+				if (server.exit_status != -1) {
+					Packet pkt = {
+						.type = MSG_EXIT,
+						.u.i = server.exit_status,
+						.len = sizeof(pkt.u.i),
+					};
+					if (server_send_packet(c, &pkt))
+						exit_packet_delivered = true;
+					else
+						FD_SET_MAX(c->socket, &new_writefds, new_fdmax);
+				} else {
+					FD_SET_MAX(c->socket, &new_writefds, new_fdmax);
+				}
+			}
 			prev_next = &c->next;
 			c = c->next;
 		}
