@@ -7,6 +7,24 @@ detach() {
 	printf ""
 }
 
+dvtm_cmd() {
+	printf "$1\n"
+	sleep 1
+}
+
+dvtm_session() {
+	sleep 1
+	dvtm_cmd 'c'
+	dvtm_cmd 'c'
+	dvtm_cmd 'c'
+	sleep 1
+	dvtm_cmd ' '
+	dvtm_cmd ' '
+	dvtm_cmd ' '
+	sleep 1
+	dvtm_cmd 'q'
+}
+
 # $1 => session-name, $2 => exit status
 expected_abduco_output() {
 	echo "[?25h[999Habduco: $1: session terminated with exit status $2"
@@ -97,6 +115,32 @@ run_test_attached_detached() {
 	fi
 }
 
+run_test_dvtm() {
+	echo -n "Running dvtm test: "
+	if ! which dvtm &> /dev/null; then
+		echo "SKIPPED"
+		return 0;
+	fi
+
+	local name="dvtm"
+	local output="$name.out"
+	local output_expected="$name.expected"
+
+	echo exit | dvtm &> /dev/null
+	expected_abduco_output "$name" $? > "$output_expected"
+	local len=`wc -c "$output_expected"  | awk '{ print $1 }'`
+	len=$((len+1))
+	if dvtm_session | $ABDUCO -c "$name" 2>&1 | head -n -1 | tail -c $len | sed 's/.$//' > "$output" &&
+	   diff -u "$output_expected" "$output" && check_environment; then
+		rm "$output" "$output_expected"
+		echo "OK"
+		return 0
+	else
+		echo "FAIL"
+		return 1
+	fi
+}
+
 test_non_existing_command || echo "Execution of non existing command FAILED"
 
 run_test_attached "seq" "seq 1 1000"
@@ -130,3 +174,5 @@ chmod +x long-running.sh
 run_test_attached_detached "attach-detach" "./long-running.sh"
 
 rm ./long-running.sh
+
+run_test_dvtm
