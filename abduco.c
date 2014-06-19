@@ -100,6 +100,7 @@ typedef struct {
 	int pty;
 	int exit_status;
 	struct termios term;
+	struct winsize winsize;
 	pid_t pid;
 	volatile sig_atomic_t running;
 	const char *name;
@@ -269,7 +270,7 @@ static bool create_session(const char *name, char * const argv[]) {
 			sigemptyset(&sa.sa_mask);
 			sa.sa_handler = server_pty_died_handler;
 			sigaction(SIGCHLD, &sa, NULL);
-			switch (server.pid = forkpty(&server.pty, NULL, has_term ? &server.term : NULL, NULL)) {
+			switch (server.pid = forkpty(&server.pty, NULL, has_term ? &server.term : NULL, &server.winsize)) {
 			case 0: /* child process */
 				fcntl(pipefds[1], F_SETFD, FD_CLOEXEC);
 				close(server.socket);
@@ -469,6 +470,11 @@ int main(int argc, char *argv[]) {
 	if (tcgetattr(STDIN_FILENO, &orig_term) != -1) {
 		server.term = orig_term;
 		has_term = true;
+	}
+
+	if (ioctl(STDIN_FILENO, TIOCGWINSZ, &server.winsize) == -1) {
+		server.winsize.ws_col = 80;
+		server.winsize.ws_row = 25;
 	}
 
 	server.read_pty = (action == 'n');
