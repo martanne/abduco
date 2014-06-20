@@ -6,11 +6,11 @@ VERSION = 0.1
 PREFIX = /usr/local
 MANPREFIX = ${PREFIX}/share/man
 
-INCS = -I. -I/usr/include -I/usr/local/include
+INCS = -I.
 LIBS = -lc -lutil
 
 CFLAGS += -std=c99 -Os ${INCS} -DVERSION=\"${VERSION}\" -DNDEBUG
-LDFLAGS += -L/usr/lib -L/usr/local/lib ${LIBS}
+LDFLAGS += ${LIBS}
 
 DEBUG_CFLAGS = ${CFLAGS} -UNDEBUG -O0 -g -ggdb -Wall
 
