@@ -214,17 +214,33 @@ static void usage() {
 
 static int create_socket_dir() {
 	size_t maxlen = sizeof(sockaddr.sun_path);
-	char *dir = getenv("HOME");
-	if (!dir)
-		dir = getenv("TMPDIR");
-	if (!dir)
-		dir = "/tmp";
-	int len = snprintf(sockaddr.sun_path, maxlen, "%s/.%s/", dir, server.name);
-	if (len < 0 || (size_t)len >= maxlen)
+	char *dirs[] = { getenv("HOME"), getenv("TMPDIR"), "/tmp" };
+	int socketfd = socket(AF_LOCAL, SOCK_STREAM, 0);
+	if (socketfd == -1)
 		return -1;
-	if (mkdir(sockaddr.sun_path, 0750) == -1 && errno != EEXIST)
-		return -1;
-	return len;
+	for (unsigned int i = 0; i < countof(dirs); i++) {
+		char *dir = dirs[i];
+		if (!dir)
+			continue;
+		int len = snprintf(sockaddr.sun_path, maxlen, "%s/.%s/", dir, server.name);
+		if (len < 0 || (size_t)len >= maxlen)
+			continue;
+		if (mkdir(sockaddr.sun_path, 0750) == -1 && errno != EEXIST)
+			continue;
+		int len2 = snprintf(sockaddr.sun_path, maxlen, "%s/.%s/.abduco-%d", dir, server.name, getpid());
+		if (len2 < 0 || (size_t)len2 >= maxlen)
+			continue;
+		socklen_t socklen = offsetof(struct sockaddr_un, sun_path) + strlen(sockaddr.sun_path) + 1;
+		if (bind(socketfd, (struct sockaddr*)&sockaddr, socklen) == -1)
+			continue;
+		unlink(sockaddr.sun_path);
+		close(socketfd);
+		sockaddr.sun_path[len] = '\0';
+		return len;
+	}
+
+	close(socketfd);
+	return -1;
 }
 
 static int create_socket(const char *name) {
@@ -233,7 +249,7 @@ static int create_socket(const char *name) {
 		strncpy(sockaddr.sun_path, name, maxlen);
 		if (sockaddr.sun_path[maxlen-1])
 			return -1;
-	} else if (name[0] == '.') {
+	} else if (name[0] == '.' && (name[1] == '.' || name[1] == '/')) {
 		char buf[maxlen], *cwd = getcwd(buf, sizeof buf);
 		if (!cwd)
 			return -1;
