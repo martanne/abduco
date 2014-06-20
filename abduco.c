@@ -93,7 +93,7 @@ struct Client {
 	Client *next;
 };
 
-typedef struct { 
+typedef struct {
 	Client *clients;
 	int socket;
 	Packet pty_output;
@@ -510,7 +510,7 @@ int main(int argc, char *argv[]) {
 				action = 'c';
 				goto redo;
 			}
-			die("attach-session"); 
+			die("attach-session");
 		}
 	}
 

@@ -32,7 +32,7 @@ expected_abduco_output() {
 
 check_environment() {
 	[ "`$ABDUCO | wc -l`" -gt 1 ] && echo Abduco session exists && return 1;
-	pgrep abduco && echo Abduco process exists && return 1; 
+	pgrep abduco && echo Abduco process exists && return 1;
 	return 0;
 }
 
@@ -78,7 +78,7 @@ run_test_detached() {
 	$cmd &> /dev/null
 	expected_abduco_output "$name" $? > "$output_expected"
 
-	if $ABDUCO -n "$name" $cmd &> /dev/null && sleep 1 && 
+	if $ABDUCO -n "$name" $cmd &> /dev/null && sleep 1 &&
 	   $ABDUCO -a "$name" 2>&1 | head -n -1 | sed 's/.$//' > "$output" &&
 	   diff -u "$output_expected" "$output" && check_environment; then
 		rm "$output" "$output_expected"
