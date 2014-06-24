@@ -77,6 +77,8 @@ static int client_mainloop() {
 					client.need_resize = true;
 					break;
 				case MSG_EXIT:
+					client_send_packet(&pkt);
+					close(server.socket);
 					return pkt.u.i;
 				}
 			}
@@ -96,6 +98,7 @@ static int client_mainloop() {
 					pkt.type = MSG_DETACH;
 					pkt.len = 0;
 					client_send_packet(&pkt);
+					close(server.socket);
 					return -1;
 				} else if (!client.readonly) {
 					client_send_packet(&pkt);

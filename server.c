@@ -186,23 +186,6 @@ static void server_mainloop() {
 			pty_data = server_read_pty(&server_packet);
 
 		for (Client **prev_next = &server.clients, *c = server.clients; c;) {
-			if (c->state == STATE_DISCONNECTED) {
-				bool first = (c == server.clients);
-				Client *t = c->next;
-				client_free(c);
-				*prev_next = c = t;
-				if (first && server.clients) {
-					Packet pkt = {
-						.type = MSG_RESIZE,
-						.len = 0,
-					};
-					server_send_packet(server.clients, &pkt);
-				} else if (!server.clients) {
-					server_mark_socket_exec(false, true);
-				}
-				continue;
-			}
-
 			if (FD_ISSET(c->socket, &readfds) && server_recv_packet(c, &client_packet)) {
 				switch (client_packet.type) {
 				case MSG_CONTENT:
@@ -221,11 +204,29 @@ static void server_mainloop() {
 					kill(-server.pid, SIGWINCH);
 					break;
 				case MSG_DETACH:
-					c->state = STATE_DETACHED;
+				case MSG_EXIT:
+					c->state = STATE_DISCONNECTED;
 					break;
 				default: /* ignore package */
 					break;
 				}
+			}
+
+			if (c->state == STATE_DISCONNECTED) {
+				bool first = (c == server.clients);
+				Client *t = c->next;
+				client_free(c);
+				*prev_next = c = t;
+				if (first && server.clients) {
+					Packet pkt = {
+						.type = MSG_RESIZE,
+						.len = 0,
+					};
+					server_send_packet(server.clients, &pkt);
+				} else if (!server.clients) {
+					server_mark_socket_exec(false, true);
+				}
+				continue;
 			}
 
 			FD_SET_MAX(c->socket, &new_readfds, new_fdmax);
