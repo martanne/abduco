@@ -33,7 +33,7 @@ static void print_packet(const char *prefix, Packet *pkt) {
 		fprintf(stderr, "%dx%d", pkt->u.ws.ws_col, pkt->u.ws.ws_row);
 		break;
 	default:
-		fprintf(stderr, "len: %d", pkt->len);
+		fprintf(stderr, "len: %zu", pkt->len);
 		break;
 	}
 	fprintf(stderr, "\n");
