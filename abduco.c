@@ -22,7 +22,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <signal.h>
-#include <poll.h>
 #include <libgen.h>
 #include <string.h>
 #include <limits.h>
@@ -266,12 +265,21 @@ static int create_socket(const char *name) {
 }
 
 static bool create_session(const char *name, char * const argv[]) {
-	int pipefds[2];
+	/* this uses the well known double fork strategy as described in section 1.7 of
+	 *
+	 *  http://www.faqs.org/faqs/unix-faq/programmer/faq/
+	 *
+	 * pipes are used for synchronization and error reporting i.e. the child sets
+	 * the close on exec flag before calling execvp(3) the parent blocks on a read(2)
+	 * in case of failure the error message is written to the pipe, success is 
+	 * indicated by EOF on the pipe.
+	 */
+	int client_pipe[2], server_pipe[2];
 	pid_t pid;
 	char errormsg[255];
 	struct sigaction sa;
 
-	if (pipe(pipefds) == -1)
+	if (pipe(client_pipe) == -1)
 		return false;
 	if ((server.socket = server_create_socket(name)) == -1)
 		return false;
@@ -279,28 +287,42 @@ static bool create_session(const char *name, char * const argv[]) {
 	switch ((pid = fork())) {
 	case 0: /* child process */
 		setsid();
-		close(pipefds[0]);
+		close(client_pipe[0]);
 		switch ((pid = fork())) {
 		case 0: /* child process */
+			if (pipe(server_pipe) == -1) {
+				snprintf(errormsg, sizeof(errormsg), "server-pipe: %s\n", strerror(errno));
+				write_all(client_pipe[1], errormsg, strlen(errormsg));
+				close(client_pipe[1]);
+				_exit(EXIT_FAILURE);
+			}
 			sa.sa_flags = 0;
 			sigemptyset(&sa.sa_mask);
 			sa.sa_handler = server_pty_died_handler;
 			sigaction(SIGCHLD, &sa, NULL);
 			switch (server.pid = forkpty(&server.pty, NULL, has_term ? &server.term : NULL, &server.winsize)) {
-			case 0: /* child process */
-				fcntl(pipefds[1], F_SETFD, FD_CLOEXEC);
+			case 0: /* child = user application process */
 				close(server.socket);
+				close(server_pipe[0]);
+				fcntl(client_pipe[1], F_SETFD, FD_CLOEXEC);
+				fcntl(server_pipe[1], F_SETFD, FD_CLOEXEC);
 				execvp(argv[0], argv);
 				snprintf(errormsg, sizeof(errormsg), "server-execvp: %s\n", strerror(errno));
-				write_all(pipefds[1], errormsg, strlen(errormsg));
-				close(pipefds[1]);
-				exit(EXIT_FAILURE);
+				write_all(client_pipe[1], errormsg, strlen(errormsg));
+				write_all(server_pipe[1], errormsg, strlen(errormsg));
+				close(client_pipe[1]);
+				close(server_pipe[1]);
+				_exit(EXIT_FAILURE);
 				break;
-			case -1:
-				die("server-forkpty");
+			case -1: /* forkpty failed */
+				snprintf(errormsg, sizeof(errormsg), "server-forkpty: %s\n", strerror(errno));
+				write_all(client_pipe[1], errormsg, strlen(errormsg));
+				close(client_pipe[1]);
+				close(server_pipe[0]);
+				close(server_pipe[1]);
+				_exit(EXIT_FAILURE);
 				break;
-			default:
-				/* SIGTTIN, SIGTTU */
+			default: /* parent = server process */
 				sa.sa_handler = server_sigterm_handler;
 				sigaction(SIGTERM, &sa, NULL);
 				sigaction(SIGINT, &sa, NULL);
@@ -316,33 +338,42 @@ static bool create_session(const char *name, char * const argv[]) {
 				dup2(fd, 1);
 				dup2(fd, 2);
 			#endif /* NDEBUG */
-				close(pipefds[1]);
-				struct pollfd pipe_status = { .fd = pipefds[0], .events = POLLIN };
-				if (poll(&pipe_status, 1, -1) == 1 && pipe_status.revents == POLLHUP)
-					exit(EXIT_FAILURE);
+				close(client_pipe[1]);
+				close(server_pipe[1]);
+				if (read_all(server_pipe[0], errormsg, sizeof(errormsg)) > 0)
+					_exit(EXIT_FAILURE);
+				close(server_pipe[0]);
 				server_mainloop();
 				break;
 			}
 			break;
-		default:
-			close(pipefds[1]);
-			exit(EXIT_SUCCESS);
+		case -1: /* fork failed */
+			snprintf(errormsg, sizeof(errormsg), "server-fork: %s\n", strerror(errno));
+			write_all(client_pipe[1], errormsg, strlen(errormsg));
+			close(client_pipe[1]);
+			_exit(EXIT_FAILURE);
+			break;
+		default: /* parent = intermediate process */
+			close(client_pipe[1]);
+			_exit(EXIT_SUCCESS);
 			break;
 		}
 		break;
 	case -1: /* fork failed */
+		close(client_pipe[0]);
+		close(client_pipe[1]);
 		return false;
-	default: /* parent */
-		close(pipefds[1]);
+	default: /* parent = client process */
+		close(client_pipe[1]);
 		int status;
 		wait(&status); /* wait for first fork */
-		ssize_t len = read_all(pipefds[0], errormsg, sizeof(errormsg));
+		ssize_t len = read_all(client_pipe[0], errormsg, sizeof(errormsg));
 		if (len > 0) {
 			write_all(STDERR_FILENO, errormsg, len);
 			unlink(sockaddr.sun_path);
 			exit(EXIT_FAILURE);
 		}
-		close(pipefds[0]);
+		close(client_pipe[0]);
 	}
 	return true;
 }
