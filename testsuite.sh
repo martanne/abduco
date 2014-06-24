@@ -31,8 +31,8 @@ expected_abduco_output() {
 }
 
 check_environment() {
-	[ "`$ABDUCO | wc -l`" -gt 1 ] && echo Abduco session exists && return 1;
-	pgrep abduco && echo Abduco process exists && return 1;
+	[ "`$ABDUCO | wc -l`" -gt 1 ] && echo Abduco session exists && exit 1;
+	pgrep abduco && echo Abduco process exists && exit 1;
 	return 0;
 }
 
