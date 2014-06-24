@@ -146,9 +146,14 @@ test_non_existing_command || echo "Execution of non existing command FAILED"
 run_test_attached "seq" "seq 1 1000"
 run_test_detached "seq" "seq 1 1000"
 
+run_test_attached "false" "false"
+run_test_detached "false" "false"
+
+run_test_attached "true" "true"
+run_test_detached "true" "true"
+
 cat > exit-status.sh <<-EOT
 	#!/bin/sh
-	echo Hello World
 	exit 42
 EOT
 chmod +x exit-status.sh
