@@ -1,6 +1,11 @@
 #!/bin/bash
 
 ABDUCO="./abduco"
+# set detach key explicitly in case it was changed in config.h
+ABDUCO_OPTS="-e ^\\"
+
+[ ! -z "$1" ] && ABDUCO="$1"
+[ ! -x "$ABDUCO" ] && echo "usage: $0 /path/to/abduco" && exit 1
 
 detach() {
 	sleep 1
@@ -103,7 +108,7 @@ run_test_attached_detached() {
 	$cmd &> /dev/null
 	expected_abduco_output "$name" $? > "$output_expected"
 
-	if detach | $ABDUCO -c "$name" $cmd &> /dev/null && sleep 3 &&
+	if detach | $ABDUCO $ABDUCO_OPTS -c "$name" $cmd &> /dev/null && sleep 3 &&
 	   $ABDUCO -a "$name" 2>&1 | head -n -1 | tail -1 | sed 's/.$//' > "$output" &&
 	   diff -u "$output_expected" "$output" && check_environment; then
 		rm "$output" "$output_expected"
