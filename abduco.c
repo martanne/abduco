@@ -447,7 +447,7 @@ static int list_session() {
 	puts("Active sessions");
 	while (n--) {
 		struct stat sb; char buf[255];
-		if (stat(namelist[n]->d_name, &sb) == 0) {
+		if (stat(namelist[n]->d_name, &sb) == 0 && S_ISSOCK(sb.st_mode)) {
 			strftime(buf, sizeof(buf), "%a%t %F %T", localtime(&sb.st_atime));
 			char status = ' ';
 			if (sb.st_mode & S_IXUSR)
