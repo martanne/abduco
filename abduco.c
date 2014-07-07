@@ -191,7 +191,7 @@ static bool recv_packet(int socket, Packet *pkt) {
 static void info(const char *str, ...) {
 	va_list ap;
 	va_start(ap, str);
-	fprintf(stderr, "\e[999H");
+	fprintf(stderr, "\033[999H");
 	if (str) {
 		fprintf(stderr, "%s: %s: ", server.name, server.session_name);
 		vfprintf(stderr, str, ap);

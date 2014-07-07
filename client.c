@@ -22,7 +22,7 @@ static bool client_recv_packet(Packet *pkt) {
 }
 
 static void client_show_cursor() {
-	printf("\e[?25h");
+	printf("\033[?25h");
 	fflush(stdout);
 }
 
