@@ -35,7 +35,8 @@ dist: clean
 	@echo creating dist tarball
 	@mkdir -p abduco-${VERSION}
 	@cp -R LICENSE Makefile README testsuite.sh config.def.h config.mk \
-		${SRC} debug.c client.c server.c forkpty-aix.c abduco.1 abduco-${VERSION}
+		${SRC} debug.c client.c server.c forkpty-aix.c forkpty-sunos.c \
+		abduco.1 abduco-${VERSION}
 	@tar -cf abduco-${VERSION}.tar abduco-${VERSION}
 	@gzip abduco-${VERSION}.tar
 	@rm -rf abduco-${VERSION}

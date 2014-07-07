@@ -52,8 +52,10 @@
 
 #include "config.h"
 
-#ifdef _AIX
+#if defined(_AIX)
 # include "forkpty-aix.c"
+#elif defined(__sun) || defined(__sun__)
+# include "forkpty-sunos.c"
 #endif
 
 #define countof(arr) (sizeof(arr) / sizeof((arr)[0]))
