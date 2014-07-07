@@ -9,6 +9,9 @@ MANPREFIX = ${PREFIX}/share/man
 INCS = -I.
 LIBS = -lc -lutil
 
+# Solaris
+#LIBS = -lc -lsocket
+
 CFLAGS += -std=c99 -Os ${INCS} -DVERSION=\"${VERSION}\" -DNDEBUG
 LDFLAGS += ${LIBS}
 
