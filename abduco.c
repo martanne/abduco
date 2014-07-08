@@ -54,7 +54,7 @@
 
 #if defined(_AIX)
 # include "forkpty-aix.c"
-#elif defined(__sun) || defined(__sun__)
+#elif defined(__sun)
 # include "forkpty-sunos.c"
 #endif
 
