@@ -22,6 +22,10 @@
 #include <stropts.h>
 #include <unistd.h>
 
+#ifndef TTY_NAME_MAX
+#define TTY_NAME_MAX TTYNAME_MAX
+#endif
+
 pid_t forkpty(int *master, char *name, struct termios *tio, struct winsize *ws)
 {
 	int	slave;
