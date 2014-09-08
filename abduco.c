@@ -448,7 +448,7 @@ static int list_session() {
 	int n = scandir(sockaddr.sun_path, &namelist, session_filter, session_comparator);
 	if (n < 0)
 		return 1;
-	puts("Active sessions");
+	printf("Active sessions (on host %s)\n", server.host+1);
 	while (n--) {
 		struct stat sb; char buf[255];
 		if (stat(namelist[n]->d_name, &sb) == 0 && S_ISSOCK(sb.st_mode)) {
@@ -458,6 +458,9 @@ static int list_session() {
 				status = '*';
 			else if (sb.st_mode & S_IXGRP)
 				status = '+';
+			char *name = strstr(namelist[n]->d_name, server.host);
+			if (name)
+				*name = '\0';
 			printf("%c %s\t%s\n", status, buf, namelist[n]->d_name);
 		}
 		free(namelist[n]);
