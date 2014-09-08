@@ -106,10 +106,11 @@ typedef struct {
 	volatile sig_atomic_t running;
 	const char *name;
 	const char *session_name;
+	char host[255];
 	bool read_pty;
 } Server;
 
-static Server server = { .running = true, .exit_status = -1 };
+static Server server = { .running = true, .exit_status = -1, .host = "@localhost" };
 static Client client;
 static struct termios orig_term, cur_term;
 bool has_term;
@@ -258,10 +259,11 @@ static int create_socket(const char *name) {
 		if (len < 0 || (size_t)len >= maxlen)
 			return -1;
 	} else {
-		int len = create_socket_dir(), rem = strlen(name);
-		if (len == -1 || maxlen - len - rem <= 0)
+		int dir_len = create_socket_dir();
+		if (dir_len == -1 || dir_len + strlen(name) + strlen(server.host) >= maxlen)
 			return -1;
-		strncat(sockaddr.sun_path, name, maxlen - len - 1);
+		strncat(sockaddr.sun_path, name, maxlen - strlen(sockaddr.sun_path) - 1);
+		strncat(sockaddr.sun_path, server.host, maxlen - strlen(sockaddr.sun_path) - 1);
 	}
 	return socket(AF_LOCAL, SOCK_STREAM, 0);
 }
@@ -426,7 +428,7 @@ static bool attach_session(const char *name) {
 }
 
 static int session_filter(const struct dirent *d) {
-	return d->d_name[0] != '.';
+	return strstr(d->d_name, server.host) != NULL;
 }
 
 static int session_comparator(const struct dirent **a, const struct dirent **b) {
@@ -467,6 +469,7 @@ static int list_session() {
 int main(int argc, char *argv[]) {
 	char **cmd = NULL, action = '\0';
 	server.name = basename(argv[0]);
+	gethostname(server.host+1, sizeof(server.host) - 1);
 	if (argc == 1)
 		exit(list_session());
 	for (int arg = 1; arg < argc; arg++) {
