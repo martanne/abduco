@@ -217,7 +217,7 @@ static void usage() {
 static int create_socket_dir() {
 	size_t maxlen = sizeof(sockaddr.sun_path);
 	char *dirs[] = { getenv("HOME"), getenv("TMPDIR"), "/tmp" };
-	int socketfd = socket(AF_LOCAL, SOCK_STREAM, 0);
+	int socketfd = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (socketfd == -1)
 		return -1;
 	for (unsigned int i = 0; i < countof(dirs); i++) {
@@ -265,7 +265,7 @@ static int create_socket(const char *name) {
 		strncat(sockaddr.sun_path, name, maxlen - strlen(sockaddr.sun_path) - 1);
 		strncat(sockaddr.sun_path, server.host, maxlen - strlen(sockaddr.sun_path) - 1);
 	}
-	return socket(AF_LOCAL, SOCK_STREAM, 0);
+	return socket(AF_UNIX, SOCK_STREAM, 0);
 }
 
 static bool create_session(const char *name, char * const argv[]) {

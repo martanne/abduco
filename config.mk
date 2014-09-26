@@ -9,6 +9,9 @@ MANPREFIX = ${PREFIX}/share/man
 INCS = -I.
 LIBS = -lc -lutil
 
+# AIX
+#LIBS = -lc
+
 # Solaris
 #LIBS = -lc -lsocket
 
