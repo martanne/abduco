@@ -50,8 +50,7 @@ pid_t forkpty(int *master, char *name, struct termios *tio, struct winsize *ws)
 			close(fd);
 		}
 
-		if (setsid() < 0)
-			return -1;
+		setsid();
 
 		fd = open(_PATH_TTY, O_RDWR|O_NOCTTY);
 		if (fd >= 0)
