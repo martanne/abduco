@@ -21,3 +21,4 @@ LDFLAGS += ${LIBS}
 DEBUG_CFLAGS = ${CFLAGS} -UNDEBUG -O0 -g -ggdb -Wall
 
 CC = cc
+STRIP = strip

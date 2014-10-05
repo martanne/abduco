@@ -43,7 +43,7 @@ dist: clean
 
 install: abduco
 	@echo stripping executable
-	@strip -s abduco
+	@${STRIP} abduco
 	@echo installing executable file to ${DESTDIR}${PREFIX}/bin
 	@mkdir -p ${DESTDIR}${PREFIX}/bin
 	@cp -f abduco ${DESTDIR}${PREFIX}/bin
