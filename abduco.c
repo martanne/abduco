@@ -209,12 +209,12 @@ static void die(const char *s) {
 	exit(EXIT_FAILURE);
 }
 
-static void usage() {
+static void usage(void) {
 	fprintf(stderr, "usage: abduco [-a|-A|-c|-n] [-r] [-e detachkey] name command\n");
 	exit(EXIT_FAILURE);
 }
 
-static int create_socket_dir() {
+static int create_socket_dir(void) {
 	size_t maxlen = sizeof(sockaddr.sun_path);
 	char *dirs[] = { getenv("HOME"), getenv("TMPDIR"), "/tmp" };
 	int socketfd = socket(AF_UNIX, SOCK_STREAM, 0);
@@ -440,7 +440,7 @@ static int session_comparator(const struct dirent **a, const struct dirent **b) 
 	return sa.st_atime < sb.st_atime ? -1 : 1;
 }
 
-static int list_session() {
+static int list_session(void) {
 	if (create_socket_dir() == -1)
 		return 1;
 	chdir(sockaddr.sun_path);

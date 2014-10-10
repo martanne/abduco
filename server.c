@@ -57,7 +57,7 @@ static int server_set_socket_non_blocking(int sock) {
     	return fcntl(sock, F_SETFL, flags | O_NONBLOCK);
 }
 
-static Client *server_accept_client() {
+static Client *server_accept_client(void) {
 	int newfd = accept(server.socket, NULL, NULL);
 	if (newfd == -1)
 		return NULL;
@@ -143,11 +143,11 @@ static void server_sigusr1_handler(int sig) {
 	}
 }
 
-static void server_atexit_handler() {
+static void server_atexit_handler(void) {
 	unlink(sockaddr.sun_path);
 }
 
-static void server_mainloop() {
+static void server_mainloop(void) {
 	atexit(server_atexit_handler);
 	fd_set new_readfds, new_writefds;
 	FD_ZERO(&new_readfds);

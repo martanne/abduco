@@ -21,18 +21,18 @@ static bool client_recv_packet(Packet *pkt) {
 	return false;
 }
 
-static void client_show_cursor() {
+static void client_show_cursor(void) {
 	printf("\033[?25h");
 	fflush(stdout);
 }
 
-static void client_restore_terminal() {
+static void client_restore_terminal(void) {
 	if (has_term)
 		tcsetattr(STDIN_FILENO, TCSADRAIN, &orig_term);
 	client_show_cursor();
 }
 
-static int client_mainloop() {
+static int client_mainloop(void) {
 	client.need_resize = true;
 	Packet pkt = {
 		.type = MSG_ATTACH,
