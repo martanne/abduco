@@ -33,6 +33,12 @@ static void client_restore_terminal(void) {
 }
 
 static int client_mainloop(void) {
+	sigset_t emptyset, blockset;
+	sigemptyset(&emptyset);
+	sigemptyset(&blockset);
+	sigaddset(&blockset, SIGWINCH);
+	sigprocmask(SIG_BLOCK, &blockset, NULL);
+
 	client.need_resize = true;
 	Packet pkt = {
 		.type = MSG_ATTACH,
@@ -60,7 +66,7 @@ static int client_mainloop(void) {
 			}
 		}
 
-		if (select(server.socket + 1, &fds, NULL, NULL, NULL) == -1) {
+		if (pselect(server.socket+1, &fds, NULL, NULL, NULL, &emptyset) == -1) {
 			if (errno == EINTR)
 				continue;
 			die("client-mainloop");
