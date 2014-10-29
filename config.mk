@@ -3,7 +3,7 @@ VERSION = 0.1
 
 # Customize below to fit your system
 
-PREFIX = /usr/local
+PREFIX ?= /usr/local
 MANPREFIX = ${PREFIX}/share/man
 
 INCS = -I.
