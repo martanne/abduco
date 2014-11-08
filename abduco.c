@@ -311,7 +311,8 @@ static bool create_session(const char *name, char * const argv[]) {
 				fcntl(client_pipe[1], F_SETFD, FD_CLOEXEC);
 				fcntl(server_pipe[1], F_SETFD, FD_CLOEXEC);
 				execvp(argv[0], argv);
-				snprintf(errormsg, sizeof(errormsg), "server-execvp: %s\n", strerror(errno));
+				snprintf(errormsg, sizeof(errormsg), "server-execvp: %s: %s\n",
+						 argv[0], strerror(errno));
 				write_all(client_pipe[1], errormsg, strlen(errormsg));
 				write_all(server_pipe[1], errormsg, strlen(errormsg));
 				close(client_pipe[1]);
