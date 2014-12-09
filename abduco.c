@@ -37,7 +37,7 @@
 #include <sys/un.h>
 #if defined(__linux__) || defined(__CYGWIN__)
 # include <pty.h>
-#elif defined(__FreeBSD__)
+#elif defined(__FreeBSD__) || defined(__DragonFly__)
 # include <libutil.h>
 #elif defined(__OpenBSD__) || defined(__NetBSD__) || defined(__APPLE__)
 # include <util.h>
