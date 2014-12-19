@@ -113,7 +113,7 @@ typedef struct {
 static Server server = { .running = true, .exit_status = -1, .host = "@localhost" };
 static Client client;
 static struct termios orig_term, cur_term;
-bool has_term;
+static bool has_term, alternate_buffer;
 
 static struct sockaddr_un sockaddr = {
 	.sun_family = AF_UNIX,
@@ -194,7 +194,6 @@ static bool recv_packet(int socket, Packet *pkt) {
 static void info(const char *str, ...) {
 	va_list ap;
 	va_start(ap, str);
-	fprintf(stderr, "\033[999H");
 	if (str) {
 		fprintf(stderr, "%s: %s: ", server.name, server.session_name);
 		vfprintf(stderr, str, ap);
@@ -409,19 +408,8 @@ static bool attach_session(const char *name, const bool terminate) {
 	sigaction(SIGWINCH, &sa, NULL);
 	sa.sa_handler = SIG_IGN;
 	sigaction(SIGPIPE, &sa, NULL);
-	atexit(client_restore_terminal);
 
-	cur_term = orig_term;
-	cur_term.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON|IXOFF);
-	cur_term.c_oflag &= ~(OPOST);
-	cur_term.c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
-	cur_term.c_cflag &= ~(CSIZE|PARENB);
-	cur_term.c_cflag |= CS8;
-	cur_term.c_cc[VLNEXT] = _POSIX_VDISABLE;
-	cur_term.c_cc[VMIN] = 1;
-	cur_term.c_cc[VTIME] = 0;
-	tcsetattr(STDIN_FILENO, TCSADRAIN, &cur_term);
-
+	client_setup_terminal();
 	int status = client_mainloop();
 	client_restore_terminal();
 	if (status == -1) {

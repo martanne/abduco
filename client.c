@@ -21,15 +21,35 @@ static bool client_recv_packet(Packet *pkt) {
 	return false;
 }
 
-static void client_show_cursor(void) {
-	printf("\033[?25h");
-	fflush(stdout);
-}
-
 static void client_restore_terminal(void) {
 	if (has_term)
 		tcsetattr(STDIN_FILENO, TCSADRAIN, &orig_term);
-	client_show_cursor();
+	if (alternate_buffer) {
+		printf("\033[?1049l");
+		fflush(stdout);
+		alternate_buffer = false;
+	}
+}
+
+static void client_setup_terminal(void) {
+	atexit(client_restore_terminal);
+
+	cur_term = orig_term;
+	cur_term.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON|IXOFF);
+	cur_term.c_oflag &= ~(OPOST);
+	cur_term.c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
+	cur_term.c_cflag &= ~(CSIZE|PARENB);
+	cur_term.c_cflag |= CS8;
+	cur_term.c_cc[VLNEXT] = _POSIX_VDISABLE;
+	cur_term.c_cc[VMIN] = 1;
+	cur_term.c_cc[VTIME] = 0;
+	tcsetattr(STDIN_FILENO, TCSADRAIN, &cur_term);
+
+	if (!alternate_buffer) {
+		printf("\033[?1049h\033[H");
+		fflush(stdout);
+		alternate_buffer = true;
+	}
 }
 
 static int client_mainloop(void) {
