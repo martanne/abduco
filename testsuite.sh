@@ -30,9 +30,27 @@ dvtm_session() {
 	dvtm_cmd 'q'
 }
 
+expected_abduco_prolog() {
+	printf "[?1049h[H"
+}
+
 # $1 => session-name, $2 => exit status
-expected_abduco_output() {
-	echo "[?25h[999Habduco: $1: session terminated with exit status $2"
+expected_abduco_epilog() {
+	echo "[?1049labduco: $1: session terminated with exit status $2"
+}
+
+# $1 => session-name, $2 => cmd to run
+expected_abduco_attached_output() {
+	expected_abduco_prolog
+	$2
+	expected_abduco_epilog "$1" $?
+}
+
+# $1 => session-name, $2 => cmd to run
+expected_abduco_detached_output() {
+	expected_abduco_prolog
+	$2 &> /dev/null
+	expected_abduco_epilog "$1" $?
 }
 
 check_environment() {
@@ -57,9 +75,9 @@ run_test_attached() {
 	local output_expected="$name.expected"
 
 	echo -n "Running test attached: $name "
-	$cmd &> "$output_expected"
-	expected_abduco_output "$name" $? >> "$output_expected"
-	$ABDUCO -c "$name" $cmd 2>&1 | head -n -1 | sed 's/.$//' > "$output"
+	expected_abduco_attached_output "$name" "$cmd" &> "$output_expected"
+	$ABDUCO -c "$name" $cmd 2>&1 | sed 's/.$//' > "$output"
+
 	if diff -u "$output_expected" "$output" && check_environment; then
 		rm "$output" "$output_expected"
 		echo "OK"
@@ -80,11 +98,10 @@ run_test_detached() {
 	local output_expected="$name.expected"
 
 	echo -n "Running test detached: $name "
-	$cmd &> /dev/null
-	expected_abduco_output "$name" $? > "$output_expected"
+	expected_abduco_detached_output "$name" "$cmd" &> "$output_expected"
 
 	if $ABDUCO -n "$name" $cmd &> /dev/null && sleep 1 &&
-	   $ABDUCO -a "$name" 2>&1 | head -n -1 | sed 's/.$//' > "$output" &&
+	   $ABDUCO -a "$name" 2>&1 | sed 's/.$//' > "$output" &&
 	   diff -u "$output_expected" "$output" && check_environment; then
 		rm "$output" "$output_expected"
 		echo "OK"
@@ -106,10 +123,10 @@ run_test_attached_detached() {
 
 	echo -n "Running test: $name "
 	$cmd &> /dev/null
-	expected_abduco_output "$name" $? > "$output_expected"
+	expected_abduco_epilog "$name" $? &> "$output_expected"
 
 	if detach | $ABDUCO $ABDUCO_OPTS -c "$name" $cmd &> /dev/null && sleep 3 &&
-	   $ABDUCO -a "$name" 2>&1 | head -n -1 | tail -1 | sed 's/.$//' > "$output" &&
+	   $ABDUCO -a "$name" 2>&1 | tail -1 | sed 's/.$//' > "$output" &&
 	   diff -u "$output_expected" "$output" && check_environment; then
 		rm "$output" "$output_expected"
 		echo "OK"
@@ -132,10 +149,10 @@ run_test_dvtm() {
 	local output_expected="$name.expected"
 
 	echo exit | dvtm &> /dev/null
-	expected_abduco_output "$name" $? > "$output_expected"
+	expected_abduco_epilog "$name" $? > "$output_expected"
 	local len=`wc -c "$output_expected"  | awk '{ print $1 }'`
 	len=$((len+1))
-	if dvtm_session | $ABDUCO -c "$name" 2>&1 | head -n -1 | tail -c $len | sed 's/.$//' > "$output" &&
+	if dvtm_session | $ABDUCO -c "$name" 2>&1 | tail -c $len | sed 's/.$//' > "$output" &&
 	   diff -u "$output_expected" "$output" && check_environment; then
 		rm "$output" "$output_expected"
 		echo "OK"
