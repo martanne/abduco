@@ -8,25 +8,25 @@ but more lightweight, replacement of the before mentioned tools.
 Quickstart
 ----------
 
-Assuming dvtm is located somewhere in $PATH, the following creates a
+Assuming dvtm is located somewhere in `$PATH`, the following creates a
 new session named 'demo':
 
- $ abduco -c demo
+	$ abduco -c demo
 
 An arbitrary application can be started as follows:
 
- $ abduco -c demo your-application
+	$ abduco -c demo your-application
 
-CTRL+\ detaches from the active session. All available sessions can be
+`CTRL+\` detaches from the active session. All available sessions can be
 displayed by running:
 
- $ abduco
- Active sessions (on host hostname)
-   Fri    2014-11-14 18:52:36    demo
+	$ abduco
+	Active sessions (on host hostname)
+	  Fri    2014-11-14 18:52:36    demo
 
 The session can be restored with
 
- $ abduco -a demo
+	$ abduco -a demo
 
 Read the manual page for further information.
 

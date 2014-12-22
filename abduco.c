@@ -210,7 +210,7 @@ static void die(const char *s) {
 }
 
 static void usage(void) {
-	fprintf(stderr, "usage: abduco [-a|-A|-c|-n] [-r] [-e detachkey] name command\n");
+	fprintf(stderr, "usage: abduco [-a|-A|-c|-C|-n] [-r] [-e detachkey] name command\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -383,7 +383,7 @@ static bool create_session(const char *name, char * const argv[]) {
 	return true;
 }
 
-static bool attach_session(const char *name) {
+static bool attach_session(const char *name, const bool fully_exit) {
 	if (server.socket > 0)
 		close(server.socket);
 	if ((server.socket = create_socket(name)) == -1)
@@ -422,7 +422,10 @@ static bool attach_session(const char *name) {
 		info("exited due to I/O errors");
 	} else {
 		info("session terminated with exit status %d", status);
-		exit(status);
+		if (fully_exit)
+			exit(status);
+
+		return false;
 	}
 
 	return true;
@@ -472,6 +475,10 @@ static int list_session(void) {
 
 int main(int argc, char *argv[]) {
 	char **cmd = NULL, action = '\0';
+	struct stat sb;
+	char* filename;
+	size_t size;
+
 	server.name = basename(argv[0]);
 	gethostname(server.host+1, sizeof(server.host) - 1);
 	if (argc == 1)
@@ -492,6 +499,7 @@ int main(int argc, char *argv[]) {
 		case 'a':
 		case 'A':
 		case 'c':
+		case 'C':
 		case 'n':
 			action = argv[arg][1];
 			break;
@@ -545,13 +553,44 @@ int main(int argc, char *argv[]) {
 			break;
 	case 'a':
 	case 'A':
-		if (!attach_session(server.session_name)) {
+		if (!attach_session(server.session_name, true)) {
 			if (action == 'A') {
 				action = 'c';
 				goto redo;
 			}
 			die("attach-session");
 		}
+		break;
+	case 'C':
+		if (create_socket_dir() == -1)
+			die("create-socket-dir");
+
+		size = strlen(sockaddr.sun_path) +
+			   strlen(server.session_name) +
+			   strlen(server.host) + 1;
+
+		if ((filename = malloc(size)) == NULL)
+			die("malloc");
+
+		snprintf(filename, size, "%s%s%s", sockaddr.sun_path,
+										   server.session_name,
+										   server.host);
+
+		if (stat(filename, &sb) == 0 && S_ISSOCK(sb.st_mode)) {
+			if (sb.st_mode & S_IXGRP) {
+				/* Attach session in order to print old exit status */
+				attach_session(server.session_name, false);
+			} else {
+				info("session not yet exited");
+				free(filename);
+				return 1;
+			}
+		}
+		free(filename);
+
+		/* Create new session */
+		action = 'c';
+		goto redo;
 	}
 
 	return 0;
