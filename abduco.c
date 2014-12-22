@@ -582,6 +582,7 @@ int main(int argc, char *argv[]) {
 				attach_session(server.session_name, false);
 			} else {
 				info("session not yet exited");
+				free(filename);
 				return 1;
 			}
 		}
