@@ -210,7 +210,7 @@ static void die(const char *s) {
 }
 
 static void usage(void) {
-	fprintf(stderr, "usage: abduco [-a|-A|-c|-n] [-r] [-e detachkey] name command\n");
+	fprintf(stderr, "usage: abduco [-a|-A|-c|-C|-n] [-r] [-e detachkey] name command\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -391,7 +391,7 @@ static bool create_session(const char *name, char * const argv[]) {
 	return true;
 }
 
-static bool attach_session(const char *name) {
+static bool attach_session(const char *name, const bool terminate) {
 	if (server.socket > 0)
 		close(server.socket);
 	if (!set_socket_name(&sockaddr, name) || (server.socket = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
@@ -430,7 +430,8 @@ static bool attach_session(const char *name) {
 		info("exited due to I/O errors");
 	} else {
 		info("session terminated with exit status %d", status);
-		exit(status);
+		if (terminate)
+			exit(status);
 	}
 
 	return true;
@@ -500,6 +501,7 @@ int main(int argc, char *argv[]) {
 		case 'a':
 		case 'A':
 		case 'c':
+		case 'C':
 		case 'n':
 			action = argv[arg][1];
 			break;
@@ -528,7 +530,8 @@ int main(int argc, char *argv[]) {
 			cmd[0] = "dvtm";
 	}
 
-	if (!action || !server.session_name || ((action == 'c' || action == 'A') && client.readonly))
+	if (!action || !server.session_name ||
+	   ((action == 'c' || action == 'C' || action == 'A') && client.readonly))
 		usage();
 
 	if (tcgetattr(STDIN_FILENO, &orig_term) != -1) {
@@ -543,8 +546,21 @@ int main(int argc, char *argv[]) {
 
 	server.read_pty = (action == 'n');
 
-	switch (action) {
 	redo:
+	switch (action) {
+	case 'C':
+		if (set_socket_name(&sockaddr, server.session_name)) {
+			struct stat sb;
+			if (stat(sockaddr.sun_path, &sb) == 0 && S_ISSOCK(sb.st_mode)) {
+				if (sb.st_mode & S_IXGRP) {
+					/* Attach session in order to print old exit status */
+					attach_session(server.session_name, false);
+				} else {
+					info("session not yet terminated");
+					return 1;
+				}
+			}
+		}
 	case 'n':
 	case 'c':
 		if (!create_session(server.session_name, cmd))
@@ -553,7 +569,7 @@ int main(int argc, char *argv[]) {
 			break;
 	case 'a':
 	case 'A':
-		if (!attach_session(server.session_name)) {
+		if (!attach_session(server.session_name, true)) {
 			if (action == 'A') {
 				action = 'c';
 				goto redo;
