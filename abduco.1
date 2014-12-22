@@ -12,6 +12,14 @@ abduco - terminal session manager
 .RI [ args \ ... "" ]
 .br
 .B abduco
+.RB [ \-e
+.IR detachkey ]
+.RB \-C
+.RB name
+.RB command
+.RI [ args \ ... "" ]
+.br
+.B abduco
 .RB [ \-r ]
 .RB [ \-e
 .IR detachkey ]
@@ -87,6 +95,11 @@ Set the key to detach which by default is set to CTRL+\\ i.e. ^\\ to detachkey.
 .TP
 .BI \-c
 Create a new session and attach immediately to it.
+.TP
+.BI \-C
+Show the exit status of an already exited session, and create a new session under the same name.
+If the session doesn't exist, it acts like
+.BI \-c
 .TP
 .BI \-n
 Create a new session but do not attach to it.
