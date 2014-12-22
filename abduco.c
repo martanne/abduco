@@ -249,19 +249,27 @@ static bool set_socket_name(struct sockaddr_un *sockaddr, const char *name) {
 	size_t maxlen = sizeof(sockaddr->sun_path);
 	if (name[0] == '/') {
 		strncpy(sockaddr->sun_path, name, maxlen);
-		if (sockaddr->sun_path[maxlen-1])
+		if (sockaddr->sun_path[maxlen-1]) {
+			errno = ENAMETOOLONG;
 			return false;
+		}
 	} else if (name[0] == '.' && (name[1] == '.' || name[1] == '/')) {
 		char buf[maxlen], *cwd = getcwd(buf, sizeof buf);
 		if (!cwd)
 			return false;
 		int len = snprintf(sockaddr->sun_path, maxlen, "%s/%s", cwd, name);
-		if (len < 0 || (size_t)len >= maxlen)
+		if (len < 0)
 			return false;
+		if ((size_t)len >= maxlen) {
+			errno = ENAMETOOLONG;
+			return false;
+		}
 	} else {
 		int dir_len = create_socket_dir(sockaddr);
-		if (dir_len == -1 || dir_len + strlen(name) + strlen(server.host) >= maxlen)
+		if (dir_len == -1 || dir_len + strlen(name) + strlen(server.host) >= maxlen) {
+			errno = ENAMETOOLONG;
 			return false;
+		}
 		strncat(sockaddr->sun_path, name, maxlen - strlen(sockaddr->sun_path) - 1);
 		strncat(sockaddr->sun_path, server.host, maxlen - strlen(sockaddr->sun_path) - 1);
 	}
