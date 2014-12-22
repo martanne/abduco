@@ -32,19 +32,21 @@ static int server_mark_socket_exec(bool exec, bool usr) {
 }
 
 static int server_create_socket(const char *name) {
-	int socket = create_socket(name);
-	if (socket == -1)
+	if (!set_socket_name(&sockaddr, name))
+		return -1;
+	int fd = socket(AF_UNIX, SOCK_STREAM, 0);
+	if (fd == -1)
 		return -1;
 	socklen_t socklen = offsetof(struct sockaddr_un, sun_path) + strlen(sockaddr.sun_path) + 1;
 	mode_t mode = S_IRUSR|S_IWUSR;
-	fchmod(socket, mode);
-	if (bind(socket, (struct sockaddr*)&sockaddr, socklen) == -1)
+	fchmod(fd, mode);
+	if (bind(fd, (struct sockaddr*)&sockaddr, socklen) == -1)
 		return -1;
-	if (fchmod(socket, mode) == -1 && chmod(sockaddr.sun_path, mode) == -1)
+	if (fchmod(fd, mode) == -1 && chmod(sockaddr.sun_path, mode) == -1)
 		goto error;
-	if (listen(socket, 5) == -1)
+	if (listen(fd, 5) == -1)
 		goto error;
-	return socket;
+	return fd;
 error:
 	unlink(sockaddr.sun_path);
 	return -1;

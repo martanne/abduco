@@ -119,7 +119,7 @@ static struct sockaddr_un sockaddr = {
 	.sun_family = AF_UNIX,
 };
 
-static int create_socket(const char *name);
+static bool set_socket_name(struct sockaddr_un *sockaddr, const char *name);
 static void die(const char *s);
 static void info(const char *str, ...);
 
@@ -214,8 +214,8 @@ static void usage(void) {
 	exit(EXIT_FAILURE);
 }
 
-static int create_socket_dir(void) {
-	size_t maxlen = sizeof(sockaddr.sun_path);
+static int create_socket_dir(struct sockaddr_un *sockaddr) {
+	size_t maxlen = sizeof(sockaddr->sun_path);
 	char *dirs[] = { getenv("HOME"), getenv("TMPDIR"), "/tmp" };
 	int socketfd = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (socketfd == -1)
@@ -224,20 +224,20 @@ static int create_socket_dir(void) {
 		char *dir = dirs[i];
 		if (!dir)
 			continue;
-		int len = snprintf(sockaddr.sun_path, maxlen, "%s/.%s/", dir, server.name);
+		int len = snprintf(sockaddr->sun_path, maxlen, "%s/.%s/", dir, server.name);
 		if (len < 0 || (size_t)len >= maxlen)
 			continue;
-		if (mkdir(sockaddr.sun_path, 0750) == -1 && errno != EEXIST)
+		if (mkdir(sockaddr->sun_path, 0750) == -1 && errno != EEXIST)
 			continue;
-		int len2 = snprintf(sockaddr.sun_path, maxlen, "%s/.%s/.abduco-%d", dir, server.name, getpid());
+		int len2 = snprintf(sockaddr->sun_path, maxlen, "%s/.%s/.abduco-%d", dir, server.name, getpid());
 		if (len2 < 0 || (size_t)len2 >= maxlen)
 			continue;
-		socklen_t socklen = offsetof(struct sockaddr_un, sun_path) + strlen(sockaddr.sun_path) + 1;
-		if (bind(socketfd, (struct sockaddr*)&sockaddr, socklen) == -1)
+		socklen_t socklen = offsetof(struct sockaddr_un, sun_path) + strlen(sockaddr->sun_path) + 1;
+		if (bind(socketfd, (struct sockaddr*)sockaddr, socklen) == -1)
 			continue;
-		unlink(sockaddr.sun_path);
+		unlink(sockaddr->sun_path);
 		close(socketfd);
-		sockaddr.sun_path[len] = '\0';
+		sockaddr->sun_path[len] = '\0';
 		return len;
 	}
 
@@ -245,27 +245,27 @@ static int create_socket_dir(void) {
 	return -1;
 }
 
-static int create_socket(const char *name) {
-	size_t maxlen = sizeof(sockaddr.sun_path);
+static bool set_socket_name(struct sockaddr_un *sockaddr, const char *name) {
+	size_t maxlen = sizeof(sockaddr->sun_path);
 	if (name[0] == '/') {
-		strncpy(sockaddr.sun_path, name, maxlen);
-		if (sockaddr.sun_path[maxlen-1])
-			return -1;
+		strncpy(sockaddr->sun_path, name, maxlen);
+		if (sockaddr->sun_path[maxlen-1])
+			return false;
 	} else if (name[0] == '.' && (name[1] == '.' || name[1] == '/')) {
 		char buf[maxlen], *cwd = getcwd(buf, sizeof buf);
 		if (!cwd)
-			return -1;
-		int len = snprintf(sockaddr.sun_path, maxlen, "%s/%s", cwd, name);
+			return false;
+		int len = snprintf(sockaddr->sun_path, maxlen, "%s/%s", cwd, name);
 		if (len < 0 || (size_t)len >= maxlen)
-			return -1;
+			return false;
 	} else {
-		int dir_len = create_socket_dir();
+		int dir_len = create_socket_dir(sockaddr);
 		if (dir_len == -1 || dir_len + strlen(name) + strlen(server.host) >= maxlen)
-			return -1;
-		strncat(sockaddr.sun_path, name, maxlen - strlen(sockaddr.sun_path) - 1);
-		strncat(sockaddr.sun_path, server.host, maxlen - strlen(sockaddr.sun_path) - 1);
+			return false;
+		strncat(sockaddr->sun_path, name, maxlen - strlen(sockaddr->sun_path) - 1);
+		strncat(sockaddr->sun_path, server.host, maxlen - strlen(sockaddr->sun_path) - 1);
 	}
-	return socket(AF_UNIX, SOCK_STREAM, 0);
+	return true;
 }
 
 static bool create_session(const char *name, char * const argv[]) {
@@ -386,7 +386,7 @@ static bool create_session(const char *name, char * const argv[]) {
 static bool attach_session(const char *name) {
 	if (server.socket > 0)
 		close(server.socket);
-	if ((server.socket = create_socket(name)) == -1)
+	if (!set_socket_name(&sockaddr, name) || (server.socket = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
 		return false;
 	socklen_t socklen = offsetof(struct sockaddr_un, sun_path) + strlen(sockaddr.sun_path) + 1;
 	if (connect(server.socket, (struct sockaddr*)&sockaddr, socklen) == -1)
@@ -442,7 +442,7 @@ static int session_comparator(const struct dirent **a, const struct dirent **b) 
 }
 
 static int list_session(void) {
-	if (create_socket_dir() == -1)
+	if (create_socket_dir(&sockaddr) == -1)
 		return 1;
 	chdir(sockaddr.sun_path);
 	struct dirent **namelist;
