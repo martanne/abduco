@@ -5,5 +5,4 @@ compiler:
 env:
   - DEBUG=
   - DEBUG=debug
-  - SCANBUILD=scan-build
-script: $SCANBUILD make $DEBUG
+script: make $DEBUG
