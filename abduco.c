@@ -173,12 +173,16 @@ static ssize_t read_all(int fd, char *buf, size_t len) {
 
 static bool send_packet(int socket, Packet *pkt) {
 	size_t size = packet_size(pkt);
+	if (size > sizeof(*pkt))
+		return false;
 	return write_all(socket, (char *)pkt, size) == size;
 }
 
 static bool recv_packet(int socket, Packet *pkt) {
 	ssize_t len = read_all(socket, (char*)pkt, packet_header_size());
 	if (len <= 0 || len != packet_header_size())
+		return false;
+	if (len > sizeof(pkt->u.msg))
 		return false;
 	if (pkt->len > 0) {
 		len = read_all(socket, pkt->u.msg, pkt->len);
