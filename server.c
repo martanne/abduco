@@ -18,17 +18,17 @@ static void client_free(Client *c) {
 	free(c);
 }
 
-static int server_mark_socket_exec(bool exec, bool usr) {
+static void server_mark_socket_exec(bool exec, bool usr) {
 	struct stat sb;
 	if (stat(sockaddr.sun_path, &sb) == -1)
-		return -1;
+		return;
 	mode_t mode = sb.st_mode;
 	mode_t flag = usr ? S_IXUSR : S_IXGRP;
 	if (exec)
 		mode |= flag;
 	else
 		mode &= ~flag;
-	return chmod(sockaddr.sun_path, mode);
+	chmod(sockaddr.sun_path, mode);
 }
 
 static int server_create_socket(const char *name) {
@@ -63,20 +63,23 @@ static int server_set_socket_non_blocking(int sock) {
 
 static Client *server_accept_client(void) {
 	int newfd = accept(server.socket, NULL, NULL);
-	if (newfd == -1)
-		return NULL;
+	if (newfd == -1 || server_set_socket_non_blocking(newfd) == -1)
+		goto error;
 	Client *c = client_malloc(newfd);
 	if (!c)
-		return NULL;
+		goto error;
 	if (!server.clients)
 		server_mark_socket_exec(true, true);
-	server_set_socket_non_blocking(newfd);
 	c->socket = newfd;
 	c->state = STATE_CONNECTED;
 	c->next = server.clients;
 	server.clients = c;
 	server.read_pty = true;
 	return c;
+error:
+	if (newfd != -1)
+		close(newfd);
+	return NULL;
 }
 
 static bool server_read_pty(Packet *pkt) {
