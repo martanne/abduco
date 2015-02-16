@@ -1,8 +1,18 @@
 language: c
-compiler:
-  - gcc
-  - clang
 env:
-  - DEBUG=
-  - DEBUG=debug
-script: make $DEBUG
+  global:
+   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+   - secure: "BoJaAWabLRyj3APu98h3l7NvF65SvyNEjNDr+ryMZuQA8y35RETtXTg7EN8sqIYZeAsnFALFBMoCxsX7jaRVUXJDNnEJo0DuLw7yz+0CSLwnmjEECqq0WOH4GTeuTPJmetyFFwG7X6ZRQm7nMwtBPS1qak0636+tA9GILYJsx68="
+script: true
+
+addons:
+  coverity_scan:
+    project:
+      name: "martanne/abduco"
+      description: "abduco build submitted via Travis CI"
+    notification_email: mat@brain-dump.org
+    build_command_prepend:
+    build_command: "make"
+    branch_pattern: coverity_scan
+
