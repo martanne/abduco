@@ -249,6 +249,7 @@ static bool set_socket_name(struct sockaddr_un *sockaddr, const char *name) {
 	if (name[0] == '/') {
 		strncpy(sockaddr->sun_path, name, maxlen);
 		if (sockaddr->sun_path[maxlen-1]) {
+			sockaddr->sun_path[maxlen-1] = '\0';
 			errno = ENAMETOOLONG;
 			return false;
 		}
