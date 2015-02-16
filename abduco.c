@@ -347,9 +347,12 @@ static bool create_session(const char *name, char * const argv[]) {
 				chdir("/");
 			#ifdef NDEBUG
 				int fd = open("/dev/null", O_RDWR);
-				dup2(fd, 0);
-				dup2(fd, 1);
-				dup2(fd, 2);
+				if (fd != -1) {
+					dup2(fd, 0);
+					dup2(fd, 1);
+					dup2(fd, 2);
+					close(fd);
+				}
 			#endif /* NDEBUG */
 				close(client_pipe[1]);
 				close(server_pipe[1]);
