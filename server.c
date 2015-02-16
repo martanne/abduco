@@ -39,16 +39,18 @@ static int server_create_socket(const char *name) {
 		return -1;
 	socklen_t socklen = offsetof(struct sockaddr_un, sun_path) + strlen(sockaddr.sun_path) + 1;
 	mode_t mode = S_IRUSR|S_IWUSR;
-	fchmod(fd, mode);
+	if (fchmod(fd, mode) == -1)
+		goto error;
 	if (bind(fd, (struct sockaddr*)&sockaddr, socklen) == -1)
 		return -1;
-	if (fchmod(fd, mode) == -1 && chmod(sockaddr.sun_path, mode) == -1)
+	if (fchmod(fd, mode) == -1 || chmod(sockaddr.sun_path, mode) == -1)
 		goto error;
 	if (listen(fd, 5) == -1)
 		goto error;
 	return fd;
 error:
 	unlink(sockaddr.sun_path);
+	close(fd);
 	return -1;
 }
 
