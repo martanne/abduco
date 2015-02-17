@@ -253,12 +253,11 @@ static int create_socket_dir(struct sockaddr_un *sockaddr) {
 static bool set_socket_name(struct sockaddr_un *sockaddr, const char *name) {
 	size_t maxlen = sizeof(sockaddr->sun_path);
 	if (name[0] == '/') {
-		strncpy(sockaddr->sun_path, name, maxlen);
-		if (sockaddr->sun_path[maxlen-1]) {
-			sockaddr->sun_path[maxlen-1] = '\0';
+		if (strlen(name) >= maxlen) {
 			errno = ENAMETOOLONG;
 			return false;
 		}
+		strncpy(sockaddr->sun_path, name, maxlen);
 	} else if (name[0] == '.' && (name[1] == '.' || name[1] == '/')) {
 		char buf[maxlen], *cwd = getcwd(buf, sizeof buf);
 		if (!cwd)
