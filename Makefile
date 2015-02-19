@@ -1,6 +1,6 @@
 include config.mk
 
-SRC += abduco.c
+SRC = abduco.c
 OBJ = ${SRC:.c=.o}
 
 all: clean options abduco
