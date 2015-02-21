@@ -38,13 +38,10 @@ static int server_create_socket(const char *name) {
 	if (fd == -1)
 		return -1;
 	socklen_t socklen = offsetof(struct sockaddr_un, sun_path) + strlen(sockaddr.sun_path) + 1;
-	mode_t mode = S_IRUSR|S_IWUSR;
-	if (fchmod(fd, mode) == -1)
-		goto error1;
+	mode_t mode = umask(S_IXUSR|S_IXGRP|S_IRWXO);
 	if (bind(fd, (struct sockaddr*)&sockaddr, socklen) == -1)
 		goto error1;
-	if (fchmod(fd, mode) == -1 || chmod(sockaddr.sun_path, mode) == -1)
-		goto error2;
+	umask(mode);
 	if (listen(fd, 5) == -1)
 		goto error2;
 	return fd;
