@@ -486,6 +486,21 @@ static bool attach_session(const char *name, const bool terminate) {
 	return terminate;
 }
 
+static bool session_exists(const char *name) {
+	struct stat sb;
+	if (!set_socket_name(&sockaddr, name))
+		return false;
+	return stat(sockaddr.sun_path, &sb) == 0 && S_ISSOCK(sb.st_mode);
+}
+
+static bool session_alive(const char *name) {
+	struct stat sb;
+	if (!set_socket_name(&sockaddr, name))
+		return false;
+	return stat(sockaddr.sun_path, &sb) == 0 && S_ISSOCK(sb.st_mode) &&
+	       (sb.st_mode & S_IXGRP) == 0;
+}
+
 static int session_filter(const struct dirent *d) {
 	return strstr(d->d_name, server.host) != NULL;
 }
@@ -601,33 +616,31 @@ int main(int argc, char *argv[]) {
 	switch (action) {
 	case 'n':
 	case 'c':
-		if (force && set_socket_name(&sockaddr, server.session_name)) {
-			struct stat sb;
-			if (stat(sockaddr.sun_path, &sb) == 0 && S_ISSOCK(sb.st_mode)) {
-				if (sb.st_mode & S_IXGRP) {
-					/* Attach session in order to print old exit status */
-					attach_session(server.session_name, false);
-				} else {
-					info("session not yet terminated");
-					return 1;
-				}
+		if (force) {
+			if (session_alive(server.session_name)) {
+				info("session exists and has not yet terminated");
+				return 1;
 			}
-			force = false;
+			if (session_exists(server.session_name))
+				attach_session(server.session_name, false);
 		}
 		if (!create_session(server.session_name, cmd))
 			die("create-session");
 		if (action == 'n')
 			break;
 	case 'a':
-	case 'A':
-		if (!attach_session(server.session_name, !force || action == 'a')) {
-			if (action == 'A') {
-				force = false;
-				action = 'c';
-				goto redo;
-			}
+		if (!attach_session(server.session_name, true))
 			die("attach-session");
+		break;
+	case 'A':
+		if (session_alive(server.session_name) && !attach_session(server.session_name, true))
+			die("attach-session");
+		if (!attach_session(server.session_name, !force)) {
+			force = false;
+			action = 'c';
+			goto redo;
 		}
+		break;
 	}
 
 	return 0;
