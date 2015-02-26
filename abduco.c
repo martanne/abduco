@@ -216,7 +216,7 @@ static void die(const char *s) {
 }
 
 static void usage(void) {
-	fprintf(stderr, "usage: abduco [-a|-A|-c|-C|-n] [-r] [-e detachkey] name command\n");
+	fprintf(stderr, "usage: abduco [-a|-A|-c|-n] [-r] [-f] [-e detachkey] name command\n");
 	exit(EXIT_FAILURE);
 }
 
