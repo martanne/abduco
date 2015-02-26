@@ -582,8 +582,7 @@ int main(int argc, char *argv[]) {
 			cmd[0] = "dvtm";
 	}
 
-	if (!action || !server.session_name ||
-	   ((action == 'c' || action == 'C' || action == 'A') && client.readonly))
+	if (!action || !server.session_name)
 		usage();
 
 	if (tcgetattr(STDIN_FILENO, &orig_term) != -1) {
