@@ -12,14 +12,6 @@ abduco - terminal session manager
 .RI [ args \ ... "" ]
 .br
 .B abduco
-.RB [ \-e
-.IR detachkey ]
-.RB \-C
-.RB name
-.RB command
-.RI [ args \ ... "" ]
-.br
-.B abduco
 .RB [ \-r ]
 .RB [ \-e
 .IR detachkey ]
@@ -93,13 +85,12 @@ Readonly session, i.e. user input is ignored.
 .BI \-e \ detachkey
 Set the key to detach which by default is set to CTRL+\\ i.e. ^\\ to detachkey.
 .TP
+.BI \-f
+Force creation of session when there is an already terminated session of the same name,
+after showing its exit status.
+.TP
 .BI \-c
 Create a new session and attach immediately to it.
-.TP
-.BI \-C
-Show the exit status of an already terminated session, and create a new session under the same name.
-If the session does not exist, it acts like
-.BI \-c
 .TP
 .BI \-n
 Create a new session but do not attach to it.

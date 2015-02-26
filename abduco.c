@@ -483,7 +483,7 @@ static bool attach_session(const char *name, const bool terminate) {
 			exit(status);
 	}
 
-	return true;
+	return terminate;
 }
 
 static int session_filter(const struct dirent *d) {
@@ -529,6 +529,7 @@ static int list_session(void) {
 }
 
 int main(int argc, char *argv[]) {
+	bool force = false;
 	char **cmd = NULL, action = '\0';
 	server.name = basename(argv[0]);
 	gethostname(server.host+1, sizeof(server.host) - 1);
@@ -561,6 +562,9 @@ int main(int argc, char *argv[]) {
 			if (esc[0] == '^' && esc[1])
 				*esc = CTRL(esc[1]);
 			KEY_DETACH = *esc;
+			break;
+		case 'f':
+			force = true;
 			break;
 		case 'r':
 			client.readonly = true;
@@ -597,8 +601,9 @@ int main(int argc, char *argv[]) {
 
 	redo:
 	switch (action) {
-	case 'C':
-		if (set_socket_name(&sockaddr, server.session_name)) {
+	case 'n':
+	case 'c':
+		if (force && set_socket_name(&sockaddr, server.session_name)) {
 			struct stat sb;
 			if (stat(sockaddr.sun_path, &sb) == 0 && S_ISSOCK(sb.st_mode)) {
 				if (sb.st_mode & S_IXGRP) {
@@ -609,17 +614,17 @@ int main(int argc, char *argv[]) {
 					return 1;
 				}
 			}
+			force = false;
 		}
-	case 'n':
-	case 'c':
 		if (!create_session(server.session_name, cmd))
 			die("create-session");
 		if (action == 'n')
 			break;
 	case 'a':
 	case 'A':
-		if (!attach_session(server.session_name, true)) {
+		if (!attach_session(server.session_name, !force || action == 'a')) {
 			if (action == 'A') {
+				force = false;
 				action = 'c';
 				goto redo;
 			}
