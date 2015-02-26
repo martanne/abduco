@@ -551,7 +551,6 @@ int main(int argc, char *argv[]) {
 		case 'a':
 		case 'A':
 		case 'c':
-		case 'C':
 		case 'n':
 			action = argv[arg][1];
 			break;
