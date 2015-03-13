@@ -7,7 +7,7 @@ run in the background - and then later reattached. Together with
 [dvtm](http://www.brain-dump.org/projects/dvtm) it provides a
 simpler and cleaner alternative to tmux or screen.
 
-![abduco+dvtm demo](http://raw.githubusercontent.com/martanne/abduco/gh-pages/screencast.gif)
+![abduco+dvtm demo](https://raw.githubusercontent.com/martanne/abduco/gh-pages/screencast.gif)
 
 abduco is in many ways very similar to [dtach]("http://dtach.sf.net)
 but is a completely independent implementation which is actively maintained,
