@@ -17,6 +17,8 @@ cleaner, more robust implementation and is distributed under the
 
 ## News
 
+ * [abduco-0.4](http://www.brain-dump.org/projects/abduco/abduco-0.4.tar.gz)
+   [released](http://lists.suckless.org/dev/1503/26027.html) (18.03.2015)
  * [abduco-0.3](http://www.brain-dump.org/projects/abduco/abduco-0.3.tar.gz)
    [released](http://lists.suckless.org/dev/1502/25557.html) (19.02.2015)
  * [abduco-0.2](http://www.brain-dump.org/projects/abduco/abduco-0.2.tar.gz)
@@ -29,10 +31,10 @@ cleaner, more robust implementation and is distributed under the
 ## Download
 
 Either download the latest source tarball
-[abduco-0.3.tar.gz](http://www.brain-dump.org/projects/abduco/abduco-0.3.tar.gz)
+[abduco-0.4.tar.gz](http://www.brain-dump.org/projects/abduco/abduco-0.4.tar.gz)
 with sha1sum
 
-    175b2c0eaf2a8b7fb044f1454d018dac4ec31293  abduco-0.3.tar.gz
+    ccd576eb57d9481d5f372e31ce84b3020f661b68  abduco-0.4.tar.gz
 
 compile and install it
 
