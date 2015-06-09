@@ -620,7 +620,6 @@ int main(int argc, char *argv[]) {
 	case 'n':
 	case 'c':
 		if (force) {
-			fprintf(stderr, "Force!");
 			if (session_alive(server.session_name)) {
 				info("session exists and has not yet terminated");
 				return 1;
