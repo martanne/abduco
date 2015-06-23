@@ -633,9 +633,10 @@ int main(int argc, char *argv[]) {
 			die("attach-session");
 		break;
 	case 'A':
-		if (session_alive(server.session_name) && !attach_session(server.session_name, true))
-			die("attach-session");
-		if (!attach_session(server.session_name, !force)) {
+		if (session_alive(server.session_name)) {
+			if (!attach_session(server.session_name, true))
+				die("attach-session");
+		} else if (!attach_session(server.session_name, !force)) {
 			force = false;
 			action = 'c';
 			goto redo;
