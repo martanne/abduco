@@ -546,25 +546,14 @@ static int list_session(void) {
 			char status = ' ';
 			char *local = strstr(namelist[n]->d_name, server.host);
 			if (local) {
-				char *name = strdup(namelist[n]->d_name);
 				*local = '\0'; /* truncate hostname if we are local */
-				if (session_alive(namelist[n]->d_name))
-					status = '*';
-				else if (session_exists(namelist[n]->d_name))
-					status = '+';
-				/* check if the socket is still valid, session_{alive,exists}
-				 * might have deleted it */
-				if (name && stat(name, &sb) == -1) {
-					free(name);
+				if (!session_exists(namelist[n]->d_name))
 					continue;
-				}
-				free(name);
-			} else {
-				if (sb.st_mode & S_IXUSR)
-					status = '*';
-				else if (sb.st_mode & S_IXGRP)
-					status = '+';
 			}
+			if (sb.st_mode & S_IXUSR)
+				status = '*';
+			else if (sb.st_mode & S_IXGRP)
+				status = '+';
 			printf("%c %s\t%s\n", status, buf, namelist[n]->d_name);
 		}
 		free(namelist[n]);
