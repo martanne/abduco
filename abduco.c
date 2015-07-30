@@ -238,11 +238,12 @@ static bool xsnprintf(char *buf, size_t size, const char *fmt, ...) {
 
 static int session_connect(const char *name) {
 	int fd;
+	struct stat sb;
 	if (!set_socket_name(&sockaddr, name) || (fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
 		return -1;
 	socklen_t socklen = offsetof(struct sockaddr_un, sun_path) + strlen(sockaddr.sun_path) + 1;
 	if (connect(fd, (struct sockaddr*)&sockaddr, socklen) == -1) {
-		if (errno == ECONNREFUSED)
+		if (errno == ECONNREFUSED && stat(sockaddr.sun_path, &sb) == 0 && S_ISSOCK(sb.st_mode))
 			unlink(sockaddr.sun_path);
 		close(fd);
 		return -1;
