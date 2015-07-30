@@ -212,8 +212,10 @@ static void server_mainloop(void) {
 					}
 					kill(-server.pid, SIGWINCH);
 					break;
-				case MSG_DETACH:
 				case MSG_EXIT:
+					exit_packet_delivered = true;
+					/* fall through */
+				case MSG_DETACH:
 					c->state = STATE_DISCONNECTED;
 					break;
 				default: /* ignore package */
@@ -249,9 +251,7 @@ static void server_mainloop(void) {
 						.u.i = server.exit_status,
 						.len = sizeof(pkt.u.i),
 					};
-					if (server_send_packet(c, &pkt))
-						exit_packet_delivered = true;
-					else
+					if (!server_send_packet(c, &pkt))
 						FD_SET_MAX(c->socket, &new_writefds, new_fdmax);
 				} else {
 					FD_SET_MAX(c->socket, &new_writefds, new_fdmax);

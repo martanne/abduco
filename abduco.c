@@ -236,6 +236,34 @@ static bool xsnprintf(char *buf, size_t size, const char *fmt, ...) {
 	return true;
 }
 
+static int session_connect(const char *name) {
+	int fd;
+	if (!set_socket_name(&sockaddr, name) || (fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
+		return -1;
+	socklen_t socklen = offsetof(struct sockaddr_un, sun_path) + strlen(sockaddr.sun_path) + 1;
+	if (connect(fd, (struct sockaddr*)&sockaddr, socklen) == -1) {
+		if (errno == ECONNREFUSED)
+			unlink(sockaddr.sun_path);
+		close(fd);
+		return -1;
+	}
+	return fd;
+}
+
+static bool session_exists(const char *name) {
+	int fd = session_connect(name);
+	if (fd != -1)
+		close(fd);
+	return fd != -1;
+}
+
+static bool session_alive(const char *name) {
+	struct stat sb;
+	return session_exists(name) &&
+	       stat(sockaddr.sun_path, &sb) == 0 &&
+	       S_ISSOCK(sb.st_mode) && (sb.st_mode & S_IXGRP) == 0;
+}
+
 static bool create_socket_dir(struct sockaddr_un *sockaddr) {
 	sockaddr->sun_path[0] = '\0';
 	uid_t uid = getuid();
@@ -348,6 +376,11 @@ static bool create_session(const char *name, char * const argv[]) {
 	char errormsg[255];
 	struct sigaction sa;
 
+	if (session_exists(name)) {
+		errno = EADDRINUSE;
+		return false;
+	}
+
 	if (pipe(client_pipe) == -1)
 		return false;
 	if ((server.socket = server_create_socket(name)) == -1)
@@ -454,10 +487,7 @@ static bool create_session(const char *name, char * const argv[]) {
 static bool attach_session(const char *name, const bool terminate) {
 	if (server.socket > 0)
 		close(server.socket);
-	if (!set_socket_name(&sockaddr, name) || (server.socket = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
-		return false;
-	socklen_t socklen = offsetof(struct sockaddr_un, sun_path) + strlen(sockaddr.sun_path) + 1;
-	if (connect(server.socket, (struct sockaddr*)&sockaddr, socklen) == -1)
+	if ((server.socket = session_connect(name)) == -1)
 		return false;
 	if (server_set_socket_non_blocking(server.socket) == -1)
 		return false;
@@ -484,21 +514,6 @@ static bool attach_session(const char *name, const bool terminate) {
 	}
 
 	return terminate;
-}
-
-static bool session_exists(const char *name) {
-	struct stat sb;
-	if (!set_socket_name(&sockaddr, name))
-		return false;
-	return stat(sockaddr.sun_path, &sb) == 0 && S_ISSOCK(sb.st_mode);
-}
-
-static bool session_alive(const char *name) {
-	struct stat sb;
-	if (!set_socket_name(&sockaddr, name))
-		return false;
-	return stat(sockaddr.sun_path, &sb) == 0 && S_ISSOCK(sb.st_mode) &&
-	       (sb.st_mode & S_IXGRP) == 0;
 }
 
 static int session_filter(const struct dirent *d) {
@@ -528,13 +543,27 @@ static int list_session(void) {
 		if (stat(namelist[n]->d_name, &sb) == 0 && S_ISSOCK(sb.st_mode)) {
 			strftime(buf, sizeof(buf), "%a%t %F %T", localtime(&sb.st_atime));
 			char status = ' ';
-			if (sb.st_mode & S_IXUSR)
-				status = '*';
-			else if (sb.st_mode & S_IXGRP)
-				status = '+';
-			char *name = strstr(namelist[n]->d_name, server.host);
-			if (name)
-				*name = '\0';
+			char *local = strstr(namelist[n]->d_name, server.host);
+			if (local) {
+				char *name = strdup(namelist[n]->d_name);
+				*local = '\0'; /* truncate hostname if we are local */
+				if (session_alive(namelist[n]->d_name))
+					status = '*';
+				else if (session_exists(namelist[n]->d_name))
+					status = '+';
+				/* check if the socket is still valid, session_{alive,exists}
+				 * might have deleted it */
+				if (name && stat(name, &sb) == -1) {
+					free(name);
+					continue;
+				}
+				free(name);
+			} else {
+				if (sb.st_mode & S_IXUSR)
+					status = '*';
+				else if (sb.st_mode & S_IXGRP)
+					status = '+';
+			}
 			printf("%c %s\t%s\n", status, buf, namelist[n]->d_name);
 		}
 		free(namelist[n]);
