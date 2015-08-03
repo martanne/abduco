@@ -42,7 +42,7 @@ static int server_create_socket(const char *name) {
 	int r = bind(fd, (struct sockaddr*)&sockaddr, socklen);
 	umask(mask);
 
-	if (r == -1) {
+	if (r == -1 || chmod(sockaddr.sun_path, S_ISVTX|S_IRUSR|S_IWUSR) == -1) {
 		close(fd);
 		return -1;
 	}
