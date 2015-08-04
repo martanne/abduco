@@ -592,32 +592,35 @@ int main(int argc, char *argv[]) {
 		}
 		if (server.session_name)
 			usage();
-		switch (argv[arg][1]) {
-		case 'a':
-		case 'A':
-		case 'c':
-		case 'n':
-			action = argv[arg][1];
-			break;
-		case 'e':
-			if (arg + 1 >= argc)
+		int c = 0;
+		while(argv[arg][++c]) {
+			switch (argv[arg][c]) {
+			case 'a':
+			case 'A':
+			case 'c':
+			case 'n':
+				action = argv[arg][c];
+				break;
+			case 'e':
+				if (arg + 1 >= argc)
+					usage();
+				char *esc = argv[++arg];
+				if (esc[0] == '^' && esc[1])
+					*esc = CTRL(esc[1]);
+				KEY_DETACH = *esc;
+				break;
+			case 'f':
+				force = true;
+				break;
+			case 'r':
+				client.readonly = true;
+				break;
+			case 'v':
+				puts("abduco-"VERSION" © 2013-2015 Marc André Tanner");
+				exit(EXIT_SUCCESS);
+			default:
 				usage();
-			char *esc = argv[++arg];
-			if (esc[0] == '^' && esc[1])
-				*esc = CTRL(esc[1]);
-			KEY_DETACH = *esc;
-			break;
-		case 'f':
-			force = true;
-			break;
-		case 'r':
-			client.readonly = true;
-			break;
-		case 'v':
-			puts("abduco-"VERSION" © 2013-2015 Marc André Tanner");
-			exit(EXIT_SUCCESS);
-		default:
-			usage();
+			}
 		}
 	}
 
