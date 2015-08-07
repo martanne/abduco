@@ -553,7 +553,7 @@ static int list_session(void) {
 	while (n--) {
 		struct stat sb; char buf[255];
 		if (stat(namelist[n]->d_name, &sb) == 0 && S_ISSOCK(sb.st_mode)) {
-			strftime(buf, sizeof(buf), "%a%t %F %T", localtime(&sb.st_atime));
+			strftime(buf, sizeof(buf), "%a%t %F %T", localtime(&sb.st_mtime));
 			char status = ' ';
 			char *local = strstr(namelist[n]->d_name, server.host);
 			if (local) {
