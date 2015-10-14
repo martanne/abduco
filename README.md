@@ -116,16 +116,16 @@ command line options.
    Start your to be shared session, make sure only you have access to
    the `private` directory:
 
-    $ abduco -c /tmp/abduco/private/session
+        $ abduco -c /tmp/abduco/private/session
 
    Then proxy the socket in unidirectional mode `-u` to a directory
    where the desired observers have sufficient access rights:
 
-    $ socat -u unix-connect:/tmp/abduco/private/session unix-listen:/tmp/abduco/public/read-only &
+        $ socat -u unix-connect:/tmp/abduco/private/session unix-listen:/tmp/abduco/public/read-only &
 
    Now the observers can connect to the read-only side of the socket:
 
-    $ abduco -a /tmp/abduco/public/read-only
+        $ abduco -a /tmp/abduco/public/read-only
 
    communication in the other direction will not be possible and keyboard
    input will hence be discarded.
