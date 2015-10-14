@@ -105,6 +105,31 @@ command line options.
    attaching to a session, then all keyboard input is ignored and the
    client is a passive observer only.
 
+   Note that this is not a security feature, but only a convenient way to
+   avoid accidental keyboard input.
+
+   If you want to make your abduco session available to another user
+   in a read only fashion, use [socat](http://www.dest-unreach.org/socat/)
+   to proxy the abduco socket in a unidirectional (from the abduco server
+   to the client, but not vice versa) way.
+
+   Start your to be shared session, make sure only you have access to
+   the `private` directory:
+
+    $ abduco -c /tmp/abduco/private/session
+
+   Then proxy the socket in unidirectional mode `-u` to a directory
+   where the desired observers have sufficient access rights:
+
+    $ socat -u unix-connect:/tmp/abduco/private/session unix-listen:/tmp/abduco/public/read-only &
+
+   Now the observers can connect to the read-only side of the socket:
+
+    $ abduco -a /tmp/abduco/public/read-only
+
+   communication in the other direction will not be possible and keyboard
+   input will hence be discarded.
+
  * **better resize handling** on shared sessions, resize request are only
    processed if they are initiated by the most recently connected, non 
    read only client.
