@@ -18,6 +18,18 @@ static void client_free(Client *c) {
 	free(c);
 }
 
+static void server_sink_client() {
+	if (!server.clients || !server.clients->next)
+		return;
+	Client *target = server.clients;
+	server.clients = target->next;
+	Client *dst = server.clients;
+	while (dst->next)
+		dst = dst->next;
+	target->next = NULL;
+	dst->next = target;
+}
+
 static void server_mark_socket_exec(bool exec, bool usr) {
 	struct stat sb;
 	if (stat(sockaddr.sun_path, &sb) == -1)
@@ -201,7 +213,9 @@ static void server_mainloop(void) {
 					server_write_pty(&client_packet);
 					break;
 				case MSG_ATTACH:
-					c->readonly = client_packet.u.b;
+					c->readonly = client_packet.u.attach.ro;
+					if (client_packet.u.attach.lp)
+						server_sink_client();
 					break;
 				case MSG_RESIZE:
 					c->state = STATE_ATTACHED;

@@ -77,7 +77,9 @@ typedef struct {
 		char msg[BUFSIZ];
 		struct winsize ws;
 		int i;
-		bool b;
+		struct {
+			bool ro, lp;
+		} attach;
 	} u;
 } Packet;
 
@@ -114,7 +116,7 @@ typedef struct {
 static Server server = { .running = true, .exit_status = -1, .host = "@localhost" };
 static Client client;
 static struct termios orig_term, cur_term;
-static bool has_term, alternate_buffer;
+static bool has_term, alternate_buffer, low_priority;
 
 static struct sockaddr_un sockaddr = {
 	.sun_family = AF_UNIX,
@@ -582,7 +584,7 @@ int main(int argc, char *argv[]) {
 	if (argc == 1)
 		exit(list_session());
 
-	while ((opt = getopt(argc, argv, "aAcne:frv")) != -1) {
+	while ((opt = getopt(argc, argv, "aAclne:frv")) != -1) {
 		switch (opt) {
 		case 'a':
 		case 'A':
@@ -602,6 +604,9 @@ int main(int argc, char *argv[]) {
 			break;
 		case 'r':
 			client.readonly = true;
+			break;
+		case 'l':
+			low_priority = true;
 			break;
 		case 'v':
 			puts("abduco-"VERSION" © 2013-2015 Marc André Tanner");

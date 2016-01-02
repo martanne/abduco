@@ -28,6 +28,7 @@ abduco - terminal session manager
 .IR detachkey ]
 .RB [ \-r ]
 .RB [ \-f ]
+.RB [ \-l ]
 .RB \-A
 .RB name
 .RB command
@@ -37,6 +38,7 @@ abduco - terminal session manager
 .RB [ \-e
 .IR detachkey ]
 .RB [ \-r ]
+.RB [ \-l ]
 .RB \-a
 .RB name
 .br
@@ -105,6 +107,9 @@ Try to connect to an existing session, upon failure create said session and atta
 .TP
 .BI \-a
 Attach to an existing session.
+.TP
+.BI \-l
+Attach with the lowest priority, meaning this client will be the last to control the size.
 .SH EXAMPLE
 Start a new session (assuming
 .BR dvtm(1)

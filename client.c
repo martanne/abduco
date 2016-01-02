@@ -62,8 +62,8 @@ static int client_mainloop(void) {
 	client.need_resize = true;
 	Packet pkt = {
 		.type = MSG_ATTACH,
-		.u = { .b = client.readonly },
-		.len = sizeof(pkt.u.b),
+		.u = { .attach = { .ro = client.readonly, .lp = low_priority } },
+		.len = sizeof(pkt.u.attach),
 	};
 	client_send_packet(&pkt);
 
