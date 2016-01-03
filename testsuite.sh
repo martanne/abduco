@@ -27,7 +27,7 @@ dvtm_session() {
 	dvtm_cmd ' '
 	dvtm_cmd ' '
 	sleep 1
-	dvtm_cmd 'q'
+	dvtm_cmd 'qq'
 }
 
 expected_abduco_prolog() {
