@@ -62,8 +62,8 @@ static int client_mainloop(void) {
 	client.need_resize = true;
 	Packet pkt = {
 		.type = MSG_ATTACH,
-		.u = { .attach = { .ro = client.readonly, .lp = low_priority } },
-		.len = sizeof(pkt.u.attach),
+		.u.i = client.flags,
+		.len = sizeof(pkt.u.i),
 	};
 	client_send_packet(&pkt);
 
@@ -126,7 +126,7 @@ static int client_mainloop(void) {
 					client_send_packet(&pkt);
 					close(server.socket);
 					return -1;
-				} else if (!client.readonly) {
+				} else if (!(client.flags & CLIENT_READONLY)) {
 					client_send_packet(&pkt);
 				}
 			}

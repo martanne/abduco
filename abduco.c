@@ -77,9 +77,6 @@ typedef struct {
 		char msg[BUFSIZ];
 		struct winsize ws;
 		int i;
-		struct {
-			bool ro, lp;
-		} attach;
 	} u;
 } Packet;
 
@@ -93,7 +90,10 @@ struct Client {
 		STATE_DISCONNECTED,
 	} state;
 	bool need_resize;
-	bool readonly;
+	enum {
+		CLIENT_READONLY = 1 << 0,
+		CLIENT_LOWPRIORITY = 1 << 1,
+	} flags;
 	Client *next;
 };
 
@@ -116,7 +116,7 @@ typedef struct {
 static Server server = { .running = true, .exit_status = -1, .host = "@localhost" };
 static Client client;
 static struct termios orig_term, cur_term;
-static bool has_term, alternate_buffer, low_priority;
+static bool has_term, alternate_buffer;
 
 static struct sockaddr_un sockaddr = {
 	.sun_family = AF_UNIX,
@@ -603,10 +603,10 @@ int main(int argc, char *argv[]) {
 			force = true;
 			break;
 		case 'r':
-			client.readonly = true;
+			client.flags |= CLIENT_READONLY;
 			break;
 		case 'l':
-			low_priority = true;
+			client.flags |= CLIENT_LOWPRIORITY;
 			break;
 		case 'v':
 			puts("abduco-"VERSION" © 2013-2015 Marc André Tanner");

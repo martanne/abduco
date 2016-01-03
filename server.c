@@ -213,14 +213,14 @@ static void server_mainloop(void) {
 					server_write_pty(&client_packet);
 					break;
 				case MSG_ATTACH:
-					c->readonly = client_packet.u.attach.ro;
-					if (client_packet.u.attach.lp)
+					c->flags = client_packet.u.i;
+					if (c->flags & CLIENT_LOWPRIORITY)
 						server_sink_client();
 					break;
 				case MSG_RESIZE:
 					c->state = STATE_ATTACHED;
 				case MSG_REDRAW:
-					if (!c->readonly && (client_packet.type == MSG_REDRAW || c == server.clients)) {
+					if (!(c->flags & CLIENT_READONLY) && (client_packet.type == MSG_REDRAW || c == server.clients)) {
 						debug("server-ioct: TIOCSWINSZ\n");
 						ioctl(server.pty, TIOCSWINSZ, &client_packet.u.ws);
 					}
