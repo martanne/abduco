@@ -54,7 +54,7 @@ In order to create a new session `abduco` requires a session name
 as well as an command which will be run. If no command is given
 the environment variable `$ABDUCO_CMD` is examined and if not set
 `dvtm` is executed. Therefore assuming `dvtm` is located somewhere
-in `$PATH` a new session named *demo* is created with: 
+in `$PATH` a new session named *demo* is created with:
 
     $ abduco -c demo
 
@@ -63,7 +63,7 @@ An arbitrary application can be started as follows:
     $ abduco -c session-name your-application
 
 `CTRL-\` detaches from the active session. This detach key can be
-changed by means of the `-e` command line option, `-e ^q` would 
+changed by means of the `-e` command line option, `-e ^q` would
 for example set it to `CTRL-q`.
 
 To get an overview of existing session run `abduco` without any
@@ -131,10 +131,10 @@ command line options.
    input will hence be discarded.
 
  * **better resize handling** on shared sessions, resize request are only
-   processed if they are initiated by the most recently connected, non 
+   processed if they are initiated by the most recently connected, non
    read only client.
 
- * **socket recreation** by sending the `SIGUSR1` signal to the server 
+ * **socket recreation** by sending the `SIGUSR1` signal to the server
    process. In case the unix domain socket was removed by accident it
    can be recreated. The simplest way to find out the server process
    id is to look for abduco processes which are reparented to the init
@@ -146,7 +146,7 @@ command line options.
 
         $ kill -USR1 $PID
 
-   If the abduco binary itself has also been deleted, but a session is 
+   If the abduco binary itself has also been deleted, but a session is
    still running, use the following command to bring back the session:
 
         $ /proc/$PID/exe
@@ -166,8 +166,8 @@ or
     git clone git://repo.or.cz/abduco.git
 
 If you have comments, suggestions, ideas, a bug report, a patch or something
-else related to abduco then write to the 
-[suckless developer mailing list](http://suckless.org/community) 
+else related to abduco then write to the
+[suckless developer mailing list](http://suckless.org/community)
 or contact me directly mat[at]brain-dump.org.
 
 [![Build Status](https://travis-ci.org/martanne/abduco.svg?branch=master)](https://travis-ci.org/martanne/abduco)

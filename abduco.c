@@ -376,7 +376,7 @@ static bool create_session(const char *name, char * const argv[]) {
 	 *
 	 * pipes are used for synchronization and error reporting i.e. the child sets
 	 * the close on exec flag before calling execvp(3) the parent blocks on a read(2)
-	 * in case of failure the error message is written to the pipe, success is 
+	 * in case of failure the error message is written to the pipe, success is
 	 * indicated by EOF on the pipe.
 	 */
 	int client_pipe[2], server_pipe[2];
