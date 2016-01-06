@@ -56,13 +56,17 @@ is examined, if it is not set
 .BR dvtm(1)
 is executed.
 
-By default all session related information is stored in
+All session related information is stored in the following directories (first
+to succeed is used):
+.RS
+.nf
+.PP
+.B $ABDUCO_SOCKET_DIR/abduco
 .B $HOME/.abduco
-with
-.BR $TMPDIR/abduco/$USER
-as a fallback and
-.BR /tmp/abduco/$USER
-as a last resort.
+.B $TMPDIR/abduco/$USER
+.B /tmp/abduco/$USER
+.fi
+.RE
 
 However if a given session name represents either a relative or absolute path
 it is used unmodified.

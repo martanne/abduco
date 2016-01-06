@@ -276,29 +276,23 @@ static bool create_socket_dir(struct sockaddr_un *sockaddr) {
 	size_t maxlen = sizeof(sockaddr->sun_path);
 	uid_t uid = getuid();
 	struct passwd *pw = getpwuid(uid);
-	char *home = getenv("HOME");
-	if ((!home || !home[0]) && pw)
-		home = pw->pw_dir;
 
-	struct {
-		char *dir;
-		bool personal; /* whether it is a per user directory */
-	} dirs[] = {
-		{ home, true },
-		{ getenv("TMPDIR"), false },
-		{ "/tmp", false },
-	};
-
-	for (unsigned int i = 0; i < countof(dirs); i++) {
+	for (unsigned int i = 0; i < countof(socket_dirs); i++) {
 		struct stat sb;
-		char *dir = dirs[i].dir;
-		bool ispersonal = dirs[i].personal;
-		if (!dir)
+		struct Dir *dir = &socket_dirs[i];
+		bool ishome = false;
+		if (dir->env) {
+			dir->path = getenv(dir->env);
+			ishome = !strcmp(dir->env, "HOME");
+			if (ishome && (!dir->path || !dir->path[0]) && pw)
+				dir->path = pw->pw_dir;
+		}
+		if (!dir->path || !dir->path[0])
 			continue;
-		if (!xsnprintf(sockaddr->sun_path, maxlen, "%s/%s%s/", dir, dir == home ? "." : "", server.name))
+		if (!xsnprintf(sockaddr->sun_path, maxlen, "%s/%s%s/", dir->path, ishome ? "." : "", server.name))
 			continue;
 		mode_t mask = umask(0);
-		int r = mkdir(sockaddr->sun_path, ispersonal ? S_IRWXU : S_IRWXU|S_IRWXG|S_IRWXO|S_ISVTX);
+		int r = mkdir(sockaddr->sun_path, dir->personal ? S_IRWXU : S_IRWXU|S_IRWXG|S_IRWXO|S_ISVTX);
 		umask(mask);
 		if (r != 0 && errno != EEXIST)
 			continue;
@@ -310,7 +304,7 @@ static bool create_socket_dir(struct sockaddr_un *sockaddr) {
 		}
 
 		size_t dirlen = strlen(sockaddr->sun_path);
-		if (!ispersonal) {
+		if (!dir->personal) {
 			/* create subdirectory only accessible to user */
 			if (pw && !xsnprintf(sockaddr->sun_path+dirlen, maxlen-dirlen, "%s/", pw->pw_name))
 				continue;
