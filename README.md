@@ -173,6 +173,20 @@ or contact me directly mat[at]brain-dump.org.
 [![Build Status](https://travis-ci.org/martanne/abduco.svg?branch=master)](https://travis-ci.org/martanne/abduco)
 [![Coverity Scan Build Status](https://scan.coverity.com/projects/4285/badge.svg)](https://scan.coverity.com/projects/4285)
 
+### Debugging
+
+The protocol content exchanged between client and server can be dumped
+to temporary files as follows:
+
+    $ make debug
+    $ ./abduco -n debug [command-to-debug] 2> server-log
+    $ ./abduco -a debug 2> client-log
+
+If you want to run client and server with one command (e.g. using the `-c`
+option) then within `gdb` the option `set follow-fork-mode {child,parent}`
+might be useful. Similarly to get a syscall trace `strace -o abduco -ff [abduco-cmd]`
+proved to be handy.
+
 ## License
 
 abduco is licensed under the [ISC license](https://raw.githubusercontent.com/martanne/abduco/master/LICENSE)
