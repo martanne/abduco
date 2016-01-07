@@ -575,8 +575,6 @@ int main(int argc, char *argv[]) {
 	char **cmd = NULL, action = '\0';
 	server.name = basename(argv[0]);
 	gethostname(server.host+1, sizeof(server.host) - 1);
-	if (argc == 1)
-		exit(list_session());
 
 	while ((opt = getopt(argc, argv, "aAclne:frv")) != -1) {
 		switch (opt) {
@@ -624,6 +622,8 @@ int main(int argc, char *argv[]) {
 			cmd[0] = "dvtm";
 	}
 
+	if (!action && !server.session_name)
+		exit(list_session());
 	if (!action || !server.session_name)
 		usage();
 
