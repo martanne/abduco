@@ -617,9 +617,11 @@ int main(int argc, char *argv[]) {
 		cmd = &argv[optind + 1];
 
 	if (!cmd) {
-		cmd = (char*[]){ getenv("ABDUCO_CMD"), NULL };
-		if (!cmd[0])
-			cmd[0] = "dvtm";
+		char *default_cmd = getenv("ABDUCO_CMD");
+		if (default_cmd)
+			cmd = (char*[]){ "/bin/sh", "-c", default_cmd, NULL };
+		else
+			cmd = (char*[]){ "dvtm", NULL };
 	}
 
 	if (!action && !server.session_name)
