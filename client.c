@@ -23,9 +23,9 @@ static bool client_recv_packet(Packet *pkt) {
 
 static void client_restore_terminal(void) {
 	if (has_term)
-		tcsetattr(STDIN_FILENO, TCSADRAIN, &orig_term);
+		tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_term);
 	if (alternate_buffer) {
-		printf("\033[?1049l");
+		printf("\033[?25h\033[?1049l");
 		fflush(stdout);
 		alternate_buffer = false;
 	}
@@ -43,7 +43,7 @@ static void client_setup_terminal(void) {
 	cur_term.c_cc[VLNEXT] = _POSIX_VDISABLE;
 	cur_term.c_cc[VMIN] = 1;
 	cur_term.c_cc[VTIME] = 0;
-	tcsetattr(STDIN_FILENO, TCSADRAIN, &cur_term);
+	tcsetattr(STDIN_FILENO, TCSANOW, &cur_term);
 
 	if (!alternate_buffer) {
 		printf("\033[?1049h\033[H");

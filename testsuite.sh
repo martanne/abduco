@@ -36,7 +36,7 @@ expected_abduco_prolog() {
 
 # $1 => session-name, $2 => exit status
 expected_abduco_epilog() {
-	echo "[?1049labduco: $1: session terminated with exit status $2"
+	echo "[?25h[?1049labduco: $1: session terminated with exit status $2"
 }
 
 # $1 => session-name, $2 => cmd to run
