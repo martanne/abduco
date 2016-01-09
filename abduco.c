@@ -576,7 +576,7 @@ int main(int argc, char *argv[]) {
 
 	char *default_cmd[4] = { "/bin/sh", "-c", getenv("ABDUCO_CMD"), NULL };
 	if (!default_cmd[2]) {
-		default_cmd[0] = "dvtm";
+		default_cmd[0] = ABDUCO_CMD;
 		default_cmd[1] = NULL;
 	}
 
