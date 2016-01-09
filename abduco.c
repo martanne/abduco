@@ -573,6 +573,13 @@ int main(int argc, char *argv[]) {
 	int opt;
 	bool force = false;
 	char **cmd = NULL, action = '\0';
+
+	char *default_cmd[4] = { "/bin/sh", "-c", getenv("ABDUCO_CMD"), NULL };
+	if (!default_cmd[2]) {
+		default_cmd[0] = "dvtm";
+		default_cmd[1] = NULL;
+	}
+
 	server.name = basename(argv[0]);
 	gethostname(server.host+1, sizeof(server.host) - 1);
 
@@ -615,14 +622,8 @@ int main(int argc, char *argv[]) {
 	/* if yet more trailing arguments, they must be the command */
 	if (optind + 1 < argc)
 		cmd = &argv[optind + 1];
-
-	if (!cmd) {
-		char *default_cmd = getenv("ABDUCO_CMD");
-		if (default_cmd)
-			cmd = (char*[]){ "/bin/sh", "-c", default_cmd, NULL };
-		else
-			cmd = (char*[]){ "dvtm", NULL };
-	}
+	else
+		cmd = default_cmd;
 
 	if (!action && !server.session_name)
 		exit(list_session());
