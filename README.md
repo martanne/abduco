@@ -83,7 +83,13 @@ A session can be reattached by using the `-a` command line option
 in combination with the session name which was used during session
 creation.
 
-    abduco -a demo
+    $ abduco -a demo
+
+If you encounter problems with incomplete redraws or other
+incompatibilities it is recommended to run your applications
+within [dvtm](https://github.com/martanne/dvtm) under abduco:
+
+    $ abduco -c demo dvtm your-application
 
 Check out the manual page for further information and all available
 command line options.
