@@ -99,9 +99,11 @@ error:
 static bool server_read_pty(Packet *pkt) {
 	pkt->type = MSG_CONTENT;
 	ssize_t len = read(server.pty, pkt->u.msg, sizeof(pkt->u.msg));
-	if (len != -1)
+	if (len > 0)
 		pkt->len = len;
-	else if (errno != EAGAIN && errno != EINTR)
+	else if (len == 0)
+		server.running = false;
+	else if (len == -1 && errno != EAGAIN && errno != EINTR && errno != EWOULDBLOCK)
 		server.running = false;
 	print_packet("server-read-pty:", pkt);
 	return len > 0;
