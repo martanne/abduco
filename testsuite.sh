@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 ABDUCO="./abduco"
 # set detach key explicitly in case it was changed in config.h
@@ -49,7 +49,7 @@ expected_abduco_attached_output() {
 # $1 => session-name, $2 => cmd to run
 expected_abduco_detached_output() {
 	expected_abduco_prolog
-	$2 &> /dev/null
+	$2 >/dev/null 2>&1
 	expected_abduco_epilog "$1" $?
 }
 
@@ -61,7 +61,7 @@ check_environment() {
 
 test_non_existing_command() {
 	check_environment || return 1;
-	$ABDUCO -c test ./non-existing-command &> /dev/null
+	$ABDUCO -c test ./non-existing-command >/dev/null 2>&1
 	check_environment || return 1;
 }
 
@@ -75,7 +75,7 @@ run_test_attached() {
 	local output_expected="$name.expected"
 
 	echo -n "Running test attached: $name "
-	expected_abduco_attached_output "$name" "$cmd" &> "$output_expected"
+	expected_abduco_attached_output "$name" "$cmd" > "$output_expected" 2>&1
 	$ABDUCO -c "$name" $cmd 2>&1 | sed 's/.$//' > "$output"
 
 	if diff -u "$output_expected" "$output" && check_environment; then
@@ -98,9 +98,9 @@ run_test_detached() {
 	local output_expected="$name.expected"
 
 	echo -n "Running test detached: $name "
-	expected_abduco_detached_output "$name" "$cmd" &> "$output_expected"
+	expected_abduco_detached_output "$name" "$cmd" > "$output_expected" 2>&1
 
-	if $ABDUCO -n "$name" $cmd &> /dev/null && sleep 1 &&
+	if $ABDUCO -n "$name" $cmd >/dev/null 2>&1 && sleep 1 &&
 	   $ABDUCO -a "$name" 2>&1 | sed 's/.$//' > "$output" &&
 	   diff -u "$output_expected" "$output" && check_environment; then
 		rm "$output" "$output_expected"
@@ -122,10 +122,10 @@ run_test_attached_detached() {
 	local output_expected="$name.expected"
 
 	echo -n "Running test: $name "
-	$cmd &> /dev/null
-	expected_abduco_epilog "$name" $? &> "$output_expected"
+	$cmd >/dev/null 2>&1
+	expected_abduco_epilog "$name" $? > "$output_expected" 2>&1
 
-	if detach | $ABDUCO $ABDUCO_OPTS -c "$name" $cmd &> /dev/null && sleep 3 &&
+	if detach | $ABDUCO $ABDUCO_OPTS -c "$name" $cmd >/dev/null 2>&1 && sleep 3 &&
 	   $ABDUCO -a "$name" 2>&1 | tail -1 | sed 's/.$//' > "$output" &&
 	   diff -u "$output_expected" "$output" && check_environment; then
 		rm "$output" "$output_expected"
@@ -139,7 +139,7 @@ run_test_attached_detached() {
 
 run_test_dvtm() {
 	echo -n "Running dvtm test: "
-	if ! which dvtm &> /dev/null; then
+	if ! which dvtm >/dev/null 2>&1; then
 		echo "SKIPPED"
 		return 0;
 	fi
@@ -148,7 +148,7 @@ run_test_dvtm() {
 	local output="$name.out"
 	local output_expected="$name.expected"
 
-	echo exit | dvtm &> /dev/null
+	echo exit | dvtm >/dev/null 2>&1
 	expected_abduco_epilog "$name" $? > "$output_expected"
 	local len=`wc -c "$output_expected"  | awk '{ print $1 }'`
 	len=$((len+1))
