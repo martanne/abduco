@@ -118,7 +118,7 @@ static int client_mainloop(void) {
 			if (len > 0) {
 				debug("client-stdin: %c\n", pkt.u.msg[0]);
 				pkt.len = len;
-				if (pkt.u.msg[0] == KEY_REDRAW) {
+				if (KEY_REDRAW && pkt.u.msg[0] == KEY_REDRAW) {
 					client.need_resize = true;
 				} else if (pkt.u.msg[0] == KEY_DETACH) {
 					pkt.type = MSG_DETACH;
