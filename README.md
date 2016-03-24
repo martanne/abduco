@@ -17,6 +17,8 @@ cleaner, more robust implementation and is distributed under the
 
 ## News
 
+ * [abduco-0.6](http://www.brain-dump.org/projects/abduco/abduco-0.6.tar.gz)
+   [released](http://lists.suckless.org/dev/1603/28589.html) (24.03.2016)
  * [abduco-0.5](http://www.brain-dump.org/projects/abduco/abduco-0.5.tar.gz)
    [released](http://lists.suckless.org/dev/1601/28094.html) (09.01.2016)
  * [abduco-0.4](http://www.brain-dump.org/projects/abduco/abduco-0.4.tar.gz)
