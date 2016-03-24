@@ -608,7 +608,7 @@ int main(int argc, char *argv[]) {
 			client.flags |= CLIENT_LOWPRIORITY;
 			break;
 		case 'v':
-			puts("abduco-"VERSION" © 2013-2015 Marc André Tanner");
+			puts("abduco-"VERSION" © 2013-2016 Marc André Tanner");
 			exit(EXIT_SUCCESS);
 		default:
 			usage();
