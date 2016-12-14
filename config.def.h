@@ -13,6 +13,8 @@ static struct Dir {
 	bool personal; /* if false a user owned sub directory will be created */
 } socket_dirs[] = {
 	{ .env  = "ABDUCO_SOCKET_DIR", false },
+	{ .env  = "XDG_RUNTIME_DIR",   false },
+	{ .env  = "XDG_CACHE_HOME",    true  },
 	{ .env  = "HOME",              true  },
 	{ .env  = "TMPDIR",            false },
 	{ .path = "/tmp",              false },
