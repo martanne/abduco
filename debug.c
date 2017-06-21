@@ -29,7 +29,7 @@ static void print_packet(const char *prefix, Packet *pkt) {
 		fwrite(pkt->u.msg, pkt->len, 1, stderr);
 		break;
 	case MSG_RESIZE:
-		fprintf(stderr, "%dx%d", pkt->u.ws.ws_col, pkt->u.ws.ws_row);
+		fprintf(stderr, "%"PRIu16"x%"PRIu16, pkt->u.ws.cols, pkt->u.ws.rows);
 		break;
 	case MSG_ATTACH:
 		fprintf(stderr, "readonly: %d low-priority: %d",
@@ -37,7 +37,7 @@ static void print_packet(const char *prefix, Packet *pkt) {
 			pkt->u.i & CLIENT_LOWPRIORITY);
 		break;
 	default:
-		fprintf(stderr, "len: %zu", pkt->len);
+		fprintf(stderr, "len: %"PRIu32, pkt->len);
 		break;
 	}
 	fprintf(stderr, "\n");

@@ -224,7 +224,10 @@ static void server_mainloop(void) {
 				case MSG_REDRAW:
 					if (!(c->flags & CLIENT_READONLY) && (client_packet.type == MSG_REDRAW || c == server.clients)) {
 						debug("server-ioct: TIOCSWINSZ\n");
-						ioctl(server.pty, TIOCSWINSZ, &client_packet.u.ws);
+						struct winsize ws = { 0 };
+						ws.ws_row = client_packet.u.ws.rows;
+						ws.ws_col = client_packet.u.ws.cols;
+						ioctl(server.pty, TIOCSWINSZ, &ws);
 					}
 					kill(-server.pid, SIGWINCH);
 					break;

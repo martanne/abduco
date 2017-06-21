@@ -15,6 +15,7 @@
  */
 #include <errno.h>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -71,12 +72,15 @@ enum PacketType {
 };
 
 typedef struct {
-	unsigned int type;
-	size_t len;
+	uint32_t type;
+	uint32_t len;
 	union {
 		char msg[BUFSIZ];
-		struct winsize ws;
-		int i;
+		struct {
+			uint16_t rows;
+			uint16_t cols;
+		} ws;
+		uint32_t i;
 	} u;
 } Packet;
 
