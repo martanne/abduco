@@ -446,9 +446,9 @@ static bool create_session(const char *name, char * const argv[]) {
 			#ifdef NDEBUG
 				int fd = open("/dev/null", O_RDWR);
 				if (fd != -1) {
-					dup2(fd, 0);
-					dup2(fd, 1);
-					dup2(fd, 2);
+					dup2(fd, STDIN_FILENO);
+					dup2(fd, STDOUT_FILENO);
+					dup2(fd, STDERR_FILENO);
 					close(fd);
 				}
 			#endif /* NDEBUG */
