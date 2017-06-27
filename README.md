@@ -42,7 +42,7 @@ with sha1sum
 
 compile and install it
 
-    $EDITOR config.mk && make && sudo make install
+    ./configure && make && sudo make install
 
 or use one of the distribution provided binary packages:
 

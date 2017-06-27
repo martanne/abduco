@@ -1,45 +1,37 @@
-include config.mk
+-include config.mk
+
+VERSION = 0.6
+
+CFLAGS_STD ?= -std=c99 -D_POSIX_C_SOURCE=200809L -D_XOPEN_SOURCE=700 -DNDEBUG
+CFLAGS_STD += -DVERSION=\"${VERSION}\"
+
+LDFLAGS_STD ?= -lc -lutil
+
+STRIP ?= strip
 
 SRC = abduco.c
-OBJ = ${SRC:.c=.o}
 
-all: clean options abduco
-
-options:
-	@echo abduco build options:
-	@echo "CFLAGS   = ${CFLAGS}"
-	@echo "LDFLAGS  = ${LDFLAGS}"
-	@echo "CC       = ${CC}"
+all: abduco
 
 config.h:
 	cp config.def.h config.h
 
-.c.o:
-	@echo CC $<
-	@${CC} -c ${CFLAGS} $<
+config.mk:
+	@touch $@
 
-${OBJ}: config.h config.mk
-
-abduco: ${OBJ}
-	@echo CC -o $@
-	@${CC} -o $@ ${OBJ} ${LDFLAGS}
+abduco: config.h config.mk *.c
+	${CC} ${CFLAGS} ${CFLAGS_STD} ${CFLAGS_AUTO} ${CFLAGS_EXTRA} ${SRC} ${LDFLAGS} ${LDFLAGS_STD} ${LDFLAGS_AUTO} -o $@
 
 debug: clean
-	@make CFLAGS='${DEBUG_CFLAGS}'
+	make CFLAGS_EXTRA='${CFLAGS_DEBUG}'
 
 clean:
 	@echo cleaning
-	@rm -f abduco ${OBJ} abduco-${VERSION}.tar.gz
+	@rm -f abduco abduco-*.tar.gz
 
 dist: clean
 	@echo creating dist tarball
-	@mkdir -p abduco-${VERSION}
-	@cp -R LICENSE Makefile README.md testsuite.sh config.def.h config.mk \
-		${SRC} debug.c client.c server.c forkpty-aix.c forkpty-sunos.c \
-		abduco.1 abduco-${VERSION}
-	@tar -cf abduco-${VERSION}.tar abduco-${VERSION}
-	@gzip abduco-${VERSION}.tar
-	@rm -rf abduco-${VERSION}
+	@git archive --prefix=abduco-${VERSION}/ -o abduco-${VERSION}.tar.gz HEAD
 
 install: abduco
 	@echo stripping executable
@@ -59,4 +51,4 @@ uninstall:
 	@echo removing manual page from ${DESTDIR}${MANPREFIX}/man1
 	@rm -f ${DESTDIR}${MANPREFIX}/man1/abduco.1
 
-.PHONY: all options clean dist install uninstall debug
+.PHONY: all clean dist install uninstall debug
