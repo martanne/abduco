@@ -79,7 +79,7 @@ static int client_mainloop(void) {
 				Packet pkt = {
 					.type = MSG_RESIZE,
 					.u = { .ws = { .rows = ws.ws_row, .cols = ws.ws_col } },
-					.len = sizeof(ws),
+					.len = sizeof(pkt.u.ws),
 				};
 				if (client_send_packet(&pkt))
 					client.need_resize = false;
