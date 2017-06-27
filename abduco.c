@@ -544,7 +544,8 @@ static int session_comparator(const struct dirent **a, const struct dirent **b) 
 static int list_session(void) {
 	if (!create_socket_dir(&sockaddr))
 		return 1;
-	chdir(sockaddr.sun_path);
+	if (chdir(sockaddr.sun_path) == -1)
+		die("list-session");
 	struct dirent **namelist;
 	int n = scandir(sockaddr.sun_path, &namelist, session_filter, session_comparator);
 	if (n < 0)
