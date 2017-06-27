@@ -75,7 +75,7 @@ typedef struct {
 	uint32_t type;
 	uint32_t len;
 	union {
-		char msg[BUFSIZ];
+		char msg[4096 - 2*sizeof(uint32_t)];
 		struct {
 			uint16_t rows;
 			uint16_t cols;
