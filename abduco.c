@@ -120,7 +120,7 @@ typedef struct {
 static Server server = { .running = true, .exit_status = -1, .host = "@localhost" };
 static Client client;
 static struct termios orig_term, cur_term;
-static bool has_term, alternate_buffer;
+static bool has_term, alternate_buffer, quiet;
 
 static struct sockaddr_un sockaddr = {
 	.sun_family = AF_UNIX,
@@ -207,12 +207,12 @@ static bool recv_packet(int socket, Packet *pkt) {
 static void info(const char *str, ...) {
 	va_list ap;
 	va_start(ap, str);
-	if (str) {
+	if (str && !quiet) {
 		fprintf(stderr, "%s: %s: ", server.name, server.session_name);
 		vfprintf(stderr, str, ap);
 		fprintf(stderr, "\r\n");
+		fflush(stderr);
 	}
-	fflush(stderr);
 	va_end(ap);
 }
 
@@ -222,7 +222,7 @@ static void die(const char *s) {
 }
 
 static void usage(void) {
-	fprintf(stderr, "usage: abduco [-a|-A|-c|-n] [-r] [-l] [-f] [-e detachkey] name command\n");
+	fprintf(stderr, "usage: abduco [-a|-A|-c|-n] [-r] [-q] [-l] [-f] [-e detachkey] name command\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -588,7 +588,7 @@ int main(int argc, char *argv[]) {
 	server.name = basename(argv[0]);
 	gethostname(server.host+1, sizeof(server.host) - 1);
 
-	while ((opt = getopt(argc, argv, "aAclne:frv")) != -1) {
+	while ((opt = getopt(argc, argv, "aAclne:fqrv")) != -1) {
 		switch (opt) {
 		case 'a':
 		case 'A':
@@ -605,6 +605,9 @@ int main(int argc, char *argv[]) {
 			break;
 		case 'f':
 			force = true;
+			break;
+		case 'q':
+			quiet = true;
 			break;
 		case 'r':
 			client.flags |= CLIENT_READONLY;
