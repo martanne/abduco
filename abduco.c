@@ -67,8 +67,7 @@ enum PacketType {
 	MSG_ATTACH  = 1,
 	MSG_DETACH  = 2,
 	MSG_RESIZE  = 3,
-	MSG_REDRAW  = 4,
-	MSG_EXIT    = 5,
+	MSG_EXIT    = 4,
 };
 
 typedef struct {

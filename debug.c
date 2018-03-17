@@ -16,7 +16,6 @@ static void print_packet(const char *prefix, Packet *pkt) {
 		[MSG_ATTACH]  = "ATTACH",
 		[MSG_DETACH]  = "DETACH",
 		[MSG_RESIZE]  = "RESIZE",
-		[MSG_REDRAW]  = "REDRAW",
 		[MSG_EXIT]    = "EXIT",
 	};
 	const char *type = "UNKNOWN";

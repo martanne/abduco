@@ -221,8 +221,7 @@ static void server_mainloop(void) {
 					break;
 				case MSG_RESIZE:
 					c->state = STATE_ATTACHED;
-				case MSG_REDRAW:
-					if (!(c->flags & CLIENT_READONLY) && (client_packet.type == MSG_REDRAW || c == server.clients)) {
+					if (!(c->flags & CLIENT_READONLY) && c == server.clients) {
 						debug("server-ioct: TIOCSWINSZ\n");
 						struct winsize ws = { 0 };
 						ws.ws_row = client_packet.u.ws.rows;
