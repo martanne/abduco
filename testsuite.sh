@@ -148,11 +148,8 @@ run_test_dvtm() {
 	local output="$name.out"
 	local output_expected="$name.expected"
 
-	echo exit | dvtm >/dev/null 2>&1
-	expected_abduco_epilog "$name" $? > "$output_expected"
-	local len=`wc -c "$output_expected"  | awk '{ print $1 }'`
-	len=$((len+1))
-	if dvtm_session | $ABDUCO -c "$name" 2>&1 | tail -c $len | sed 's/.$//' > "$output" &&
+	: > "$output_expected"
+	if dvtm_session | $ABDUCO -c "$name" > "$output" 2>&1 &&
 	   diff -u "$output_expected" "$output" && check_environment; then
 		rm "$output" "$output_expected"
 		echo "OK"
