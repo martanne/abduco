@@ -36,6 +36,9 @@ static void print_packet(const char *prefix, Packet *pkt) {
 			pkt->u.i & CLIENT_READONLY,
 			pkt->u.i & CLIENT_LOWPRIORITY);
 		break;
+	case MSG_EXIT:
+		fprintf(stderr, "status: %"PRIu32, pkt->u.i);
+		break;
 	default:
 		fprintf(stderr, "len: %"PRIu32, pkt->len);
 		break;
