@@ -22,8 +22,9 @@ static bool client_recv_packet(Packet *pkt) {
 }
 
 static void client_restore_terminal(void) {
-	if (has_term)
-		tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_term);
+	if (!has_term)
+		return;
+	tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_term);
 	if (alternate_buffer) {
 		printf("\033[?25h\033[?1049l");
 		fflush(stdout);
@@ -32,6 +33,8 @@ static void client_restore_terminal(void) {
 }
 
 static void client_setup_terminal(void) {
+	if (!has_term)
+		return;
 	atexit(client_restore_terminal);
 
 	cur_term = orig_term;
