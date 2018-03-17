@@ -129,6 +129,9 @@ static int client_mainloop(void) {
 				} else if (!(client.flags & CLIENT_READONLY)) {
 					client_send_packet(&pkt);
 				}
+			} else if (len == 0) {
+				debug("client-stdin: EOF\n");
+				return -1;
 			}
 		}
 	}
