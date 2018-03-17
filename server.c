@@ -150,6 +150,14 @@ static Client *server_accept_client(void) {
 	c->next = server.clients;
 	server.clients = c;
 	server.read_pty = true;
+
+	Packet pkt = {
+		.type = MSG_PID,
+		.len = sizeof pkt.u.l,
+		.u.l = getpid(),
+	};
+	server_send_packet(c, &pkt);
+
 	return c;
 error:
 	if (newfd != -1)

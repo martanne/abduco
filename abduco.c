@@ -68,6 +68,7 @@ enum PacketType {
 	MSG_DETACH  = 2,
 	MSG_RESIZE  = 3,
 	MSG_EXIT    = 4,
+	MSG_PID     = 5,
 };
 
 typedef struct {
@@ -80,6 +81,7 @@ typedef struct {
 			uint16_t cols;
 		} ws;
 		uint32_t i;
+		uint64_t l;
 	} u;
 } Packet;
 
@@ -256,11 +258,15 @@ static int session_connect(const char *name) {
 	return fd;
 }
 
-static bool session_exists(const char *name) {
-	int fd = session_connect(name);
-	if (fd != -1)
-		close(fd);
-	return fd != -1;
+static pid_t session_exists(const char *name) {
+	Packet pkt;
+	pid_t pid = 0;
+	if ((server.socket = session_connect(name)) == -1)
+		return pid;
+	if (client_recv_packet(&pkt) && pkt.type == MSG_PID)
+		pid = pkt.u.l;
+	close(server.socket);
+	return pid;
 }
 
 static bool session_alive(const char *name) {
@@ -553,19 +559,20 @@ static int list_session(void) {
 	while (n--) {
 		struct stat sb; char buf[255];
 		if (stat(namelist[n]->d_name, &sb) == 0 && S_ISSOCK(sb.st_mode)) {
+			pid_t pid = 0;
 			strftime(buf, sizeof(buf), "%a%t %F %T", localtime(&sb.st_mtime));
 			char status = ' ';
 			char *local = strstr(namelist[n]->d_name, server.host);
 			if (local) {
 				*local = '\0'; /* truncate hostname if we are local */
-				if (!session_exists(namelist[n]->d_name))
+				if (!(pid = session_exists(namelist[n]->d_name)))
 					continue;
 			}
 			if (sb.st_mode & S_IXUSR)
 				status = '*';
 			else if (sb.st_mode & S_IXGRP)
 				status = '+';
-			printf("%c %s\t%s\n", status, buf, namelist[n]->d_name);
+			printf("%c %s\t%jd\t%s\n", status, buf, (intmax_t)pid, namelist[n]->d_name);
 		}
 		free(namelist[n]);
 	}

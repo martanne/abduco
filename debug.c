@@ -17,6 +17,7 @@ static void print_packet(const char *prefix, Packet *pkt) {
 		[MSG_DETACH]  = "DETACH",
 		[MSG_RESIZE]  = "RESIZE",
 		[MSG_EXIT]    = "EXIT",
+		[MSG_PID]     = "PID",
 	};
 	const char *type = "UNKNOWN";
 	if (pkt->type < countof(msgtype) && msgtype[pkt->type])
@@ -37,6 +38,9 @@ static void print_packet(const char *prefix, Packet *pkt) {
 		break;
 	case MSG_EXIT:
 		fprintf(stderr, "status: %"PRIu32, pkt->u.i);
+		break;
+	case MSG_PID:
+		fprintf(stderr, "pid: %"PRIu32, pkt->u.i);
 		break;
 	default:
 		fprintf(stderr, "len: %"PRIu32, pkt->len);
