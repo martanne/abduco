@@ -120,7 +120,7 @@ typedef struct {
 static Server server = { .running = true, .exit_status = -1, .host = "@localhost" };
 static Client client;
 static struct termios orig_term, cur_term;
-static bool has_term, alternate_buffer, quiet;
+static bool has_term, alternate_buffer, quiet, passthrough;
 
 static struct sockaddr_un sockaddr = {
 	.sun_family = AF_UNIX,
@@ -588,6 +588,8 @@ int main(int argc, char *argv[]) {
 	server.name = basename(argv[0]);
 	gethostname(server.host+1, sizeof(server.host) - 1);
 
+	passthrough = !isatty(STDIN_FILENO);
+
 	while ((opt = getopt(argc, argv, "aAclne:fqrv")) != -1) {
 		switch (opt) {
 		case 'a':
@@ -623,6 +625,11 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+	if (passthrough) {
+		quiet = true;
+		client.flags |= CLIENT_LOWPRIORITY;
+	}
+
 	/* collect the session name if trailing args */
 	if (optind < argc)
 		server.session_name = argv[optind];
@@ -638,7 +645,7 @@ int main(int argc, char *argv[]) {
 	if (!action || !server.session_name)
 		usage();
 
-	if (tcgetattr(STDIN_FILENO, &orig_term) != -1) {
+	if (!passthrough && tcgetattr(STDIN_FILENO, &orig_term) != -1) {
 		server.term = orig_term;
 		has_term = true;
 	}

@@ -76,6 +76,9 @@ If for some reason the
 domain socket representing a session is deleted, sending
 .BR SIGUSR1
 to the server process will recreate it.
+
+If standard input does not refer to a terminal, its content is passed
+through to the underlying session.
 .SH OPTIONS
 If no command line arguments are given all currently active sessions are
 printed sorted by their respective creation date. Lines starting with an

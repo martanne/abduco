@@ -100,7 +100,8 @@ static int client_mainloop(void) {
 			if (client_recv_packet(&pkt)) {
 				switch (pkt.type) {
 				case MSG_CONTENT:
-					write_all(STDOUT_FILENO, pkt.u.msg, pkt.len);
+					if (!passthrough)
+						write_all(STDOUT_FILENO, pkt.u.msg, pkt.len);
 					break;
 				case MSG_RESIZE:
 					client.need_resize = true;
