@@ -222,7 +222,7 @@ static void die(const char *s) {
 }
 
 static void usage(void) {
-	fprintf(stderr, "usage: abduco [-a|-A|-c|-n] [-r] [-q] [-l] [-f] [-e detachkey] name command\n");
+	fprintf(stderr, "usage: abduco [-a|-A|-c|-n] [-p] [-r] [-q] [-l] [-f] [-e detachkey] name command\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -590,7 +590,7 @@ int main(int argc, char *argv[]) {
 
 	passthrough = !isatty(STDIN_FILENO);
 
-	while ((opt = getopt(argc, argv, "aAclne:fqrv")) != -1) {
+	while ((opt = getopt(argc, argv, "aAclne:fpqrv")) != -1) {
 		switch (opt) {
 		case 'a':
 		case 'A':
@@ -607,6 +607,9 @@ int main(int argc, char *argv[]) {
 			break;
 		case 'f':
 			force = true;
+			break;
+		case 'p':
+			passthrough = true;
 			break;
 		case 'q':
 			quiet = true;
@@ -626,6 +629,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (passthrough) {
+		if (!action)
+			action = 'a';
 		quiet = true;
 		client.flags |= CLIENT_LOWPRIORITY;
 	}

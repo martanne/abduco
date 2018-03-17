@@ -77,8 +77,9 @@ domain socket representing a session is deleted, sending
 .BR SIGUSR1
 to the server process will recreate it.
 
-If standard input does not refer to a terminal, its content is passed
-through to the underlying session.
+If standard input does not refer to a terminal (or the
+.B -p
+option was given), its content is passed through to the underlying session.
 .SH OPTIONS
 If no command line arguments are given all currently active sessions are
 printed sorted by their respective creation date. Lines starting with an
@@ -120,6 +121,13 @@ Attach with the lowest priority, meaning this client will be the last to control
 .TP
 .BI \-q
 Be quiet, do not print informative messages.
+.TP
+.BI \-p
+Pass through content of standard input to the session. Implies the
+.B \-q
+and
+.B \-l
+options.
 .SH EXAMPLE
 Start a new session (assuming
 .BR dvtm(1)
