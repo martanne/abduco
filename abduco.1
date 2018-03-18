@@ -1,151 +1,219 @@
-.TH ABDUCO 1 abduco\-VERSION
-.nh
-.SH NAME
-abduco - terminal session manager
-.SH SYNOPSIS
-.B abduco
-.RB [ \-e
-.IR detachkey ]
-.RB [ \-r ]
-.RB [ \-f ]
-.RB \-c
-.RB name
-.RB command
-.RI [ args \ ... "" ]
-.br
-.B abduco
-.RB [ \-e
-.IR detachkey ]
-.RB [ \-r ]
-.RB [ \-f ]
-.RB \-n
-.RB name
-.RB command
-.RI [ args \ ... "" ]
-.br
-.B abduco
-.RB [ \-e
-.IR detachkey ]
-.RB [ \-r ]
-.RB [ \-f ]
-.RB [ \-l ]
-.RB \-A
-.RB name
-.RB command
-.RI [ args \ ... "" ]
-.br
-.B abduco
-.RB [ \-e
-.IR detachkey ]
-.RB [ \-r ]
-.RB [ \-l ]
-.RB \-a
-.RB name
-.br
-.SH DESCRIPTION
-.B abduco
-provides a way to disconnect a given application from its controlling
-terminal, thus it provides roughly the same session attach/detach support as
-.BR screen(1) , " tmux(1)" " or" " dtach(1)".
-
-If the
-.BR command
-to execute is not specified, the environment variable
-.BR $ABDUCO_CMD
-is examined, if it is not set
-.BR dvtm(1)
-is executed.
-
-All session related information is stored in the following directories (first
-to succeed is used):
-.RS
-.nf
-.PP
-.B $ABDUCO_SOCKET_DIR/abduco
-.B $HOME/.abduco
-.B $TMPDIR/abduco/$USER
-.B /tmp/abduco/$USER
-.fi
-.RE
-
-However if a given session name represents either a relative or absolute path
-it is used unmodified.
-
-If for some reason the
-.BR unix(7)
-domain socket representing a session is deleted, sending
-.BR SIGUSR1
-to the server process will recreate it.
-
-If standard input does not refer to a terminal (or the
-.B -p
-option was given), its content is passed through to the underlying session.
-.SH OPTIONS
-If no command line arguments are given all currently active sessions are
-printed sorted by their respective creation date. Lines starting with an
-asterik
-.BR *
-indicate that at least one client is connected.
+.Dd March 18, 2018
+.Dt ABDUCO 1
+.Os abduco VERSION
+.
+.Sh NAME
+.Nm abduco
+.Nd terminal session manager
+.
+.Sh SYNOPSIS
+.Nm
+.Fl a
+.Op options ...
+.Cm name
+.
+.Nm
+.Fl A
+.Op options ...
+.Cm name
+.Cm command Op args ...
+.
+.Nm
+.Fl c
+.Op options ...
+.Cm name
+.Cm command Op args ...
+.
+.Nm
+.Fl n
+.Op options ...
+.Cm name
+.Cm command Op args ...
+.
+.Sh DESCRIPTION
+.
+.Nm
+disassociates a given application from its controlling
+terminal, thereby providing roughly the same session attach/detach support as
+.Xr screen 1 ,
+.Xr tmux 1 ,
+or
+.Xr dtach 1 .
+.Pp
+A session comprises of an
+.Nm
+server process which spawns a user
+command in its own pseudo terminal
+.Pq see Xr pty 7 .
+Each session is given a name represented by a unix domain socket
+.Pq see Xr unix 7
+stored in the local file system.
+.Nm
+clients can connect to it and their standard input output streams
+are relayed to the command supervised by the server.
+.Pp
+.Nm
+operates on the raw I/O byte stream without interpreting any terminal
+escape sequences. As a consequence the terminal state is not preserved
+across sessions. If this functionality is desired, it should be provided
+by another utility such as
+.Xr dvtm 1 .
+.
+.Ss ACTIONS
+.
+If no command line arguments are given, all currently active sessions are
+listed sorted by their respective creation date. Lines starting with an
+asterisk
+.Pq *
+indicate that at least one client is currently connected.
 A plus sign
-.BR +
-indicates that the command terminated while no client was connected, attach
-to get its exit status.
-.TP
-.B \-v
-Print version information to standard output and exit.
-.TP
-.B \-r
-Readonly session, i.e. user input is ignored.
-.TP
-.B \-e \fIdetachkey\fR
-Set the key to detach which by default is set to CTRL+\\ i.e. ^\\ to detachkey.
-.TP
-.BI \-f
+.Pq +
+signals that the command terminated while no client was connected.
+Attaching to the session will print its exit status.
+The next column shows the PID of the server process, followed by the session
+.Ic name .
+.Pp
+.Nm
+provides different actions of which one must be provided.
+.
+.Bl -tag -width indent
+.It Fl a
+Attach to an existing session.
+.It Fl A
+Try to connect to an existing session, upon failure create said session and attach immediately to it.
+.It Fl c
+Create a new session and attach immediately to it.
+.It Fl n
+Create a new session but do not attach to it.
+.El
+.
+.Ss OPTIONS
+.
+Additionally the following options can be provided to further tweak
+the behavior.
+.Bl -tag -width indent
+.It Fl e Ar detachkey
+Set the key to detach. Defaults to
+.Aq Ctrl+\e
+which is specified as ^\\ i.e. Ctrl is represented as a caret
+.Pq ^ .
+.It Fl f
 Force creation of session when there is an already terminated session of the same name,
 after showing its exit status.
-.TP
-.BI \-c
-Create a new session and attach immediately to it.
-.TP
-.BI \-n
-Create a new session but do not attach to it.
-.TP
-.BI \-A
-Try to connect to an existing session, upon failure create said session and attach immediately to it.
-.TP
-.BI \-a
-Attach to an existing session.
-.TP
-.BI \-l
+.It Fl l
 Attach with the lowest priority, meaning this client will be the last to control the size.
-.TP
-.BI \-q
-Be quiet, do not print informative messages.
-.TP
-.BI \-p
+.It Fl p
 Pass through content of standard input to the session. Implies the
-.B \-q
+.Fl q
 and
-.B \-l
+.Fl l
 options.
-.SH EXAMPLE
+.It Fl q
+Be quiet, do not print informative messages.
+.It Fl r
+Read-only session, user input is ignored.
+.It Fl v
+Print version information and exit.
+.El
+.
+.Sh SIGNALS
+.
+.Bl -tag -width indent
+.It Dv SIGWINCH
+Whenever the primary client resizes its terminal the server process will deliver a
+.Ev SIGWINCH
+signal to the supervised process.
+.It Dv SIGUSR1
+If for some reason the unix domain socket representing a session is deleted, sending
+.Ev SIGUSR1
+to the server process will recreate it.
+.It Dv SIGTERM
+Detaches a client.
+.El
+.
+.Sh ENVIRONMENT
+.
+.Bl -tag -width indent
+.It Ev ABDUCO_CMD
+If
+.Ic command
+is not specified, the environment variable
+.Ev $ABDUCO_CMD
+is examined, if it is not set
+.Xr dvtm 1
+is executed.
+.El
+.Pp
+See the
+.Sx FILES
+section for environment variables used in determining the location
+of unix domain sockets representing sessions.
+.Sh FILES
+.
+All session related information is stored in the following directories (first
+to succeed is used):
+.Bl -bullet
+.It
+.Ev $ABDUCO_SOCKET_DIR/abduco
+.It
+.Ev $HOME/.abduco
+.It
+.Ev $TMPDIR/abduco/$USER
+.It
+.Ev /tmp/abduco/$USER
+.El
+.
+.Pp
+However, if a given session
+.Ic name
+represents either a relative or absolute path it is used unmodified.
+.
+.
+.Sh EXAMPLES
+.
 Start a new session (assuming
-.BR dvtm(1)
+.Xr dvtm 1
 is in
-.BR $PATH )
+.Ev $PATH )
 with
-.nf
-
-.B abduco -c my-session
-
-.fi
+.Pp
+.Dl $ abduco -c my-session
+.Pp
 do some work, then detach by pressing
-.B CTRL+\e
-and later reattach with
-.nf
-
-.B abduco -a my-session
-
-.fi
-.SH AUTHOR
-abduco is written by Marc André Tanner <mat at brain-dump.org>
+.Aq Ctrl+\e ,
+list existing session by running
+.Nm
+without any arguments and later reattach with
+.Pp
+.Dl $ abduco -a my-session
+.Pp
+Alternatively, we can also explicitly specify the command to run.
+.Pp
+.Dl $ abduco -c my-session /bin/sh
+.Pp
+Attach with a
+.Aq Ctrl+z
+as detach key.
+.Pp
+.Dl $ abduco -e ^z -a my-session
+.Pp
+Send a command to an existing session.
+.Pp
+.Dl $ echo make | abduco -a my-session
+.Pp
+Or in a slightly more interactive fashion.
+.Pp
+.Dl $ abduco -p my-session
+.Dl make
+.Dl ^D
+.
+.Sh SEE ALSO
+.Xr dvtm 1 ,
+.Xr dtach 1 ,
+.Xr tmux 1 ,
+.Xr screen 1
+.
+.Sh AUTHOR
+.Nm
+is written by
+.An Marc André Tanner Aq mat at brain-dump.org
