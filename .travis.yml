@@ -1,8 +1,22 @@
 language: c
-compiler:
-  - gcc
-  - clang
-env:
-  - DEBUG=
-  - DEBUG=debug
-script: make $DEBUG
+matrix:
+  include:
+    - os: linux
+      compiler: gcc
+      env: TARGET=
+    - os: linux
+      compiler: clang
+      env: TARGET=
+    - os: linux
+      compiler: gcc
+      env: TARGET=debug
+    - os: linux
+      compiler: clang
+      env: TARGET=debug
+    - os: osx
+      compiler: clang
+      env: TARGET=
+    - os: osx
+      compiler: clang
+      env: TARGET=debug
+script: ./configure && make $TARGET
