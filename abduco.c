@@ -282,7 +282,7 @@ static bool create_socket_dir(struct sockaddr_un *sockaddr) {
 	if (socketfd == -1)
 		return false;
 
-	size_t maxlen = sizeof(sockaddr->sun_path);
+	const size_t maxlen = sizeof(sockaddr->sun_path);
 	uid_t uid = getuid();
 	struct passwd *pw = getpwuid(uid);
 
@@ -352,7 +352,7 @@ static bool create_socket_dir(struct sockaddr_un *sockaddr) {
 }
 
 static bool set_socket_name(struct sockaddr_un *sockaddr, const char *name) {
-	size_t maxlen = sizeof(sockaddr->sun_path);
+	const size_t maxlen = sizeof(sockaddr->sun_path);
 	if (name[0] == '/') {
 		if (strlen(name) >= maxlen) {
 			errno = ENAMETOOLONG;
