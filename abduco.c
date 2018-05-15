@@ -353,6 +353,9 @@ static bool create_socket_dir(struct sockaddr_un *sockaddr) {
 
 static bool set_socket_name(struct sockaddr_un *sockaddr, const char *name) {
 	const size_t maxlen = sizeof(sockaddr->sun_path);
+	const char *session_name = NULL;
+	char buf[maxlen];
+
 	if (name[0] == '/') {
 		if (strlen(name) >= maxlen) {
 			errno = ENAMETOOLONG;
@@ -360,7 +363,7 @@ static bool set_socket_name(struct sockaddr_un *sockaddr, const char *name) {
 		}
 		strncpy(sockaddr->sun_path, name, maxlen);
 	} else if (name[0] == '.' && (name[1] == '.' || name[1] == '/')) {
-		char buf[maxlen], *cwd = getcwd(buf, sizeof buf);
+		char *cwd = getcwd(buf, sizeof buf);
 		if (!cwd)
 			return false;
 		if (!xsnprintf(sockaddr->sun_path, maxlen, "%s/%s", cwd, name))
@@ -372,9 +375,17 @@ static bool set_socket_name(struct sockaddr_un *sockaddr, const char *name) {
 			errno = ENAMETOOLONG;
 			return false;
 		}
+		session_name = name;
 		strncat(sockaddr->sun_path, name, maxlen - strlen(sockaddr->sun_path) - 1);
 		strncat(sockaddr->sun_path, server.host, maxlen - strlen(sockaddr->sun_path) - 1);
 	}
+
+	if (!session_name) {
+		strncpy(buf, sockaddr->sun_path, sizeof buf);
+		session_name = basename(buf);
+	}
+	setenv("ABDUCO_SESSION", session_name, 1);
+
 	return true;
 }
 
