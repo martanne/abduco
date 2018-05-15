@@ -385,6 +385,7 @@ static bool set_socket_name(struct sockaddr_un *sockaddr, const char *name) {
 		session_name = basename(buf);
 	}
 	setenv("ABDUCO_SESSION", session_name, 1);
+	setenv("ABDUCO_SOCKET", sockaddr->sun_path, 1);
 
 	return true;
 }
