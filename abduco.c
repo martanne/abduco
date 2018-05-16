@@ -606,8 +606,6 @@ int main(int argc, char *argv[]) {
 	server.name = basename(argv[0]);
 	gethostname(server.host+1, sizeof(server.host) - 1);
 
-	passthrough = !isatty(STDIN_FILENO);
-
 	while ((opt = getopt(argc, argv, "aAclne:fpqrv")) != -1) {
 		switch (opt) {
 		case 'a':
@@ -646,13 +644,6 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	if (passthrough) {
-		if (!action)
-			action = 'a';
-		quiet = true;
-		client.flags |= CLIENT_LOWPRIORITY;
-	}
-
 	/* collect the session name if trailing args */
 	if (optind < argc)
 		server.session_name = argv[optind];
@@ -662,6 +653,16 @@ int main(int argc, char *argv[]) {
 		cmd = &argv[optind + 1];
 	else
 		cmd = default_cmd;
+
+	if (server.session_name && !isatty(STDIN_FILENO))
+		passthrough = true;
+
+	if (passthrough) {
+		if (!action)
+			action = 'a';
+		quiet = true;
+		client.flags |= CLIENT_LOWPRIORITY;
+	}
 
 	if (!action && !server.session_name)
 		exit(list_session());
