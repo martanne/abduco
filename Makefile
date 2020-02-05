@@ -8,6 +8,7 @@ CFLAGS_STD += -DVERSION=\"${VERSION}\"
 LDFLAGS_STD ?= -lc -lutil
 
 STRIP ?= strip
+INSTALL ?= install
 
 SRC = abduco.c
 
@@ -33,13 +34,12 @@ dist: clean
 	@echo creating dist tarball
 	@git archive --prefix=abduco-${VERSION}/ -o abduco-${VERSION}.tar.gz HEAD
 
+install-strip:
+	${MAKE} INSTALL='${INSTALL} -s' install
+
 install: abduco
-	@echo stripping executable
-	@${STRIP} abduco
 	@echo installing executable file to ${DESTDIR}${PREFIX}/bin
-	@mkdir -p ${DESTDIR}${PREFIX}/bin
-	@cp -f abduco ${DESTDIR}${PREFIX}/bin
-	@chmod 755 ${DESTDIR}${PREFIX}/bin/abduco
+	@${INSTALL} abduco ${DESTDIR}${PREFIX}/bin
 	@echo installing manual page to ${DESTDIR}${MANPREFIX}/man1
 	@mkdir -p ${DESTDIR}${MANPREFIX}/man1
 	@sed "s/VERSION/${VERSION}/g" < abduco.1 > ${DESTDIR}${MANPREFIX}/man1/abduco.1
@@ -51,4 +51,4 @@ uninstall:
 	@echo removing manual page from ${DESTDIR}${MANPREFIX}/man1
 	@rm -f ${DESTDIR}${MANPREFIX}/man1/abduco.1
 
-.PHONY: all clean dist install uninstall debug
+.PHONY: all clean dist install-strip install uninstall debug
