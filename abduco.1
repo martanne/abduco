@@ -54,16 +54,17 @@ are relayed to the command supervised by the server.
 .Pp
 .Nm
 operates on the raw I/O byte stream without interpreting any terminal
-escape sequences. As a consequence the terminal state is not preserved
-across sessions. If this functionality is desired, it should be provided
-by another utility such as
+escape sequences.
+As a consequence the terminal state is not preserved across sessions.
+If this functionality is desired, it should be provided by another
+utility such as
 .Xr dvtm 1 .
 .
 .Ss ACTIONS
 .
 If no command line arguments are given, all currently active sessions are
-listed sorted by their respective creation date. Lines starting with an
-asterisk
+listed sorted by their respective creation date.
+Lines starting with an asterisk
 .Pq *
 indicate that at least one client is currently connected.
 A plus sign
@@ -93,7 +94,8 @@ Additionally the following options can be provided to further tweak
 the behavior.
 .Bl -tag -width indent
 .It Fl e Ar detachkey
-Set the key to detach. Defaults to
+Set the key to detach.
+Defaults to
 .Aq Ctrl+\e
 which is specified as ^\\ i.e. Ctrl is represented as a caret
 .Pq ^ .
@@ -103,7 +105,8 @@ after showing its exit status.
 .It Fl l
 Attach with the lowest priority, meaning this client will be the last to control the size.
 .It Fl p
-Pass through content of standard input to the session. Implies the
+Pass through content of standard input to the session.
+Implies the
 .Fl q
 and
 .Fl l
@@ -217,7 +220,7 @@ Or in a slightly more interactive fashion.
 .Xr tmux 1 ,
 .Xr screen 1
 .
-.Sh AUTHOR
+.Sh AUTHORS
 .Nm
 is written by
 .An Marc André Tanner Aq mat at brain-dump.org
