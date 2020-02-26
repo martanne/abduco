@@ -173,8 +173,8 @@ run_test_dvtm() {
 
 test_non_existing_command || echo "Execution of non existing command FAILED"
 
-run_test_attached "seq" "seq 1 1000"
-run_test_detached "seq" "seq 1 1000"
+run_test_attached "awk" "awk 'BEGIN {for(i=1;i<=1000;i++) print i}'"
+run_test_detached "awk" "awk 'BEGIN {for(i=1;i<=1000;i++) print i}'"
 
 run_test_attached "false" "false"
 run_test_detached "false" "false"
