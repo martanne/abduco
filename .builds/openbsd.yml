@@ -1,0 +1,11 @@
+image: openbsd/latest
+sources:
+  - https://github.com/martanne/abduco
+tasks:
+  - build: |
+      cd abduco
+      ./configure
+      make
+  - test: |
+      cd abduco
+      ./testsuite.sh
