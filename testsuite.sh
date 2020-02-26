@@ -76,9 +76,9 @@ run_test_attached() {
 
 	echo -n "Running test attached: $name "
 	expected_abduco_attached_output "$name" "$cmd" > "$output_expected" 2>&1
-	$ABDUCO -c "$name" $cmd 2>&1 | sed 's/.$//' > "$output"
 
-	if diff -u "$output_expected" "$output" && check_environment; then
+	if $ABDUCO -c "$name" $cmd 2>&1 | sed 's/.$//' > "$output" && sleep 1 &&
+	   diff -u "$output_expected" "$output" && check_environment; then
 		rm "$output" "$output_expected"
 		echo "OK"
 		return 0
