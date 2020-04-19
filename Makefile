@@ -48,11 +48,13 @@ install: abduco installdirs
 	@mkdir -p ${DESTDIR}${MANPREFIX}/man1
 	@sed "s/VERSION/${VERSION}/g" < abduco.1 > ${DESTDIR}${MANPREFIX}/man1/abduco.1
 	@chmod 644 ${DESTDIR}${MANPREFIX}/man1/abduco.1
-	@echo installing zsh completion file to ${DESTDIR}${SHAREDIR}/zsh/site-functions
-	@install -Dm644 contrib/abduco.zsh ${DESTDIR}${SHAREDIR}/zsh/site-functions/_abduco
 
 install-strip: install
 	${STRIP} ${DESTDIR}${PREFIX}/bin/abduco
+
+install-completion:
+	@echo installing zsh completion file to ${DESTDIR}${SHAREDIR}/zsh/site-functions
+	@install -Dm644 contrib/abduco.zsh ${DESTDIR}${SHAREDIR}/zsh/site-functions/_abduco
 
 uninstall:
 	@echo removing executable file from ${DESTDIR}${PREFIX}/bin
@@ -62,4 +64,4 @@ uninstall:
 	@echo removing zsh completion file from ${DESTDIR}${SHAREDIR}/zsh/site-functions
 	@rm -f ${DESTDIR}${SHAREDIR}/zsh/site-functions/_abduco
 
-.PHONY: all clean dist install installdirs install-strip uninstall debug
+.PHONY: all clean dist install installdirs install-strip install-completion uninstall debug
