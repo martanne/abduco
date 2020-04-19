@@ -10,7 +10,8 @@ LDFLAGS_STD ?= -lc -lutil
 STRIP ?= strip
 INSTALL ?= install
 
-ZSHPREFIX ?= /usr/local
+PREFIX ?= /usr/local
+SHAREDIR ?= ${PREFIX}/share
 
 SRC = abduco.c
 
@@ -47,8 +48,8 @@ install: abduco installdirs
 	@mkdir -p ${DESTDIR}${MANPREFIX}/man1
 	@sed "s/VERSION/${VERSION}/g" < abduco.1 > ${DESTDIR}${MANPREFIX}/man1/abduco.1
 	@chmod 644 ${DESTDIR}${MANPREFIX}/man1/abduco.1
-	@echo installing zsh completion file to ${DESTDIR}${ZSHPREFIX}/share/zsh/site-functions
-	@install -Dm644 abduco.zsh ${DESTDIR}${ZSHPREFIX}/share/zsh/site-functions/_abduco
+	@echo installing zsh completion file to ${DESTDIR}${SHAREDIR}/zsh/site-functions
+	@install -Dm644 contrib/abduco.zsh ${DESTDIR}${SHAREDIR}/zsh/site-functions/_abduco
 
 install-strip: install
 	${STRIP} ${DESTDIR}${PREFIX}/bin/abduco
@@ -58,7 +59,7 @@ uninstall:
 	@rm -f ${DESTDIR}${PREFIX}/bin/abduco
 	@echo removing manual page from ${DESTDIR}${MANPREFIX}/man1
 	@rm -f ${DESTDIR}${MANPREFIX}/man1/abduco.1
-	@echo removing zsh completion file from ${DESTDIR}/usr/share/zsh/site-functions
-	@rm -f ${DESTDIR}${ZSHPREFIX}/share/zsh/site-functions/_abduco
+	@echo removing zsh completion file from ${DESTDIR}${SHAREDIR}/zsh/site-functions
+	@rm -f ${DESTDIR}${SHAREDIR}/zsh/site-functions/_abduco
 
 .PHONY: all clean dist install installdirs install-strip uninstall debug
