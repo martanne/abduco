@@ -36,9 +36,13 @@ dist: clean
 	@echo creating dist tarball
 	@git archive --prefix=abduco-${VERSION}/ -o abduco-${VERSION}.tar.gz HEAD
 
-install: abduco
+installdirs:
+	@${INSTALL} -d ${DESTDIR}${PREFIX}/bin \
+		${DESTDIR}${MANPREFIX}/man1
+
+install: abduco installdirs
 	@echo installing executable file to ${DESTDIR}${PREFIX}/bin
-	@${INSTALL} abduco ${DESTDIR}${PREFIX}/bin
+	@${INSTALL} -m 0755 abduco ${DESTDIR}${PREFIX}/bin
 	@echo installing manual page to ${DESTDIR}${MANPREFIX}/man1
 	@mkdir -p ${DESTDIR}${MANPREFIX}/man1
 	@sed "s/VERSION/${VERSION}/g" < abduco.1 > ${DESTDIR}${MANPREFIX}/man1/abduco.1
@@ -57,4 +61,4 @@ uninstall:
 	@echo removing zsh completion file from ${DESTDIR}/usr/share/zsh/site-functions
 	@rm -f ${DESTDIR}${ZSHPREFIX}/share/zsh/site-functions/_abduco
 
-.PHONY: all clean dist install install-strip uninstall debug
+.PHONY: all clean dist install installdirs install-strip uninstall debug
