@@ -36,9 +36,6 @@ dist: clean
 	@echo creating dist tarball
 	@git archive --prefix=abduco-${VERSION}/ -o abduco-${VERSION}.tar.gz HEAD
 
-install-strip:
-	${MAKE} INSTALL='${INSTALL} -s' install
-
 install: abduco
 	@echo installing executable file to ${DESTDIR}${PREFIX}/bin
 	@${INSTALL} abduco ${DESTDIR}${PREFIX}/bin
@@ -49,6 +46,9 @@ install: abduco
 	@echo installing zsh completion file to ${DESTDIR}${ZSHPREFIX}/share/zsh/site-functions
 	@install -Dm644 abduco.zsh ${DESTDIR}${ZSHPREFIX}/share/zsh/site-functions/_abduco
 
+install-strip: install
+	${STRIP} ${DESTDIR}${PREFIX}/bin/abduco
+
 uninstall:
 	@echo removing executable file from ${DESTDIR}${PREFIX}/bin
 	@rm -f ${DESTDIR}${PREFIX}/bin/abduco
@@ -57,4 +57,4 @@ uninstall:
 	@echo removing zsh completion file from ${DESTDIR}/usr/share/zsh/site-functions
 	@rm -f ${DESTDIR}${ZSHPREFIX}/share/zsh/site-functions/_abduco
 
-.PHONY: all clean dist install-strip install uninstall debug
+.PHONY: all clean dist install install-strip uninstall debug
