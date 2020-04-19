@@ -463,7 +463,8 @@ static bool create_session(const char *name, char * const argv[]) {
 				sa.sa_handler = SIG_IGN;
 				sigaction(SIGPIPE, &sa, NULL);
 				sigaction(SIGHUP, &sa, NULL);
-				chdir("/");
+				if (chdir("/") == -1)
+					_exit(EXIT_FAILURE);
 			#ifdef NDEBUG
 				int fd = open("/dev/null", O_RDWR);
 				if (fd != -1) {
