@@ -501,8 +501,7 @@ static bool create_session(const char *name, char * const argv[]) {
 		return false;
 	default: /* parent = client process */
 		close(client_pipe[1]);
-		int status;
-		wait(&status); /* wait for first fork */
+		while (waitpid(pid, NULL, 0) == -1 && errno == EINTR);
 		ssize_t len = read_all(client_pipe[0], errormsg, sizeof(errormsg));
 		if (len > 0) {
 			write_all(STDERR_FILENO, errormsg, len);
