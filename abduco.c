@@ -697,6 +697,7 @@ int main(int argc, char *argv[]) {
 			die("create-session");
 		if (action == 'n')
 			break;
+		/* fall through */
 	case 'a':
 		if (!attach_session(server.session_name, true))
 			die("attach-session");
