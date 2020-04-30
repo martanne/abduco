@@ -1,10 +1,10 @@
 # abduco a tool for session {at,de}tach support
 
-[abduco](http://www.brain-dump.org/projects/abduco) provides
+[abduco](https://www.brain-dump.org/projects/abduco) provides
 session management i.e. it allows programs to be run independently
 from their controlling terminal. That is programs can be detached -
 run in the background - and then later reattached. Together with
-[dvtm](http://www.brain-dump.org/projects/dvtm) it provides a
+[dvtm](https://www.brain-dump.org/projects/dvtm) it provides a
 simpler and cleaner alternative to tmux or screen.
 
 ![abduco+dvtm demo](https://raw.githubusercontent.com/martanne/abduco/gh-pages/screencast.gif#center)
@@ -17,19 +17,19 @@ cleaner, more robust implementation and is distributed under the
 
 ## News
 
- * [abduco-0.6](http://www.brain-dump.org/projects/abduco/abduco-0.6.tar.gz)
-   [released](http://lists.suckless.org/dev/1603/28589.html) (24.03.2016)
- * [abduco-0.5](http://www.brain-dump.org/projects/abduco/abduco-0.5.tar.gz)
-   [released](http://lists.suckless.org/dev/1601/28094.html) (09.01.2016)
- * [abduco-0.4](http://www.brain-dump.org/projects/abduco/abduco-0.4.tar.gz)
-   [released](http://lists.suckless.org/dev/1503/26027.html) (18.03.2015)
- * [abduco-0.3](http://www.brain-dump.org/projects/abduco/abduco-0.3.tar.gz)
-   [released](http://lists.suckless.org/dev/1502/25557.html) (19.02.2015)
- * [abduco-0.2](http://www.brain-dump.org/projects/abduco/abduco-0.2.tar.gz)
-   [released](http://lists.suckless.org/dev/1411/24447.html) (15.11.2014)
- * [abduco-0.1](http://www.brain-dump.org/projects/abduco/abduco-0.1.tar.gz)
-   [released](http://lists.suckless.org/dev/1407/22703.html) (05.07.2014)
- * [Initial announcement](http://lists.suckless.org/dev/1403/20372.html)
+ * [abduco-0.6](https://www.brain-dump.org/projects/abduco/abduco-0.6.tar.gz)
+   [released](https://lists.suckless.org/dev/1603/28589.html) (24.03.2016)
+ * [abduco-0.5](https://www.brain-dump.org/projects/abduco/abduco-0.5.tar.gz)
+   [released](https://lists.suckless.org/dev/1601/28094.html) (09.01.2016)
+ * [abduco-0.4](https://www.brain-dump.org/projects/abduco/abduco-0.4.tar.gz)
+   [released](https://lists.suckless.org/dev/1503/26027.html) (18.03.2015)
+ * [abduco-0.3](https://www.brain-dump.org/projects/abduco/abduco-0.3.tar.gz)
+   [released](https://lists.suckless.org/dev/1502/25557.html) (19.02.2015)
+ * [abduco-0.2](https://www.brain-dump.org/projects/abduco/abduco-0.2.tar.gz)
+   [released](https://lists.suckless.org/dev/1411/24447.html) (15.11.2014)
+ * [abduco-0.1](https://www.brain-dump.org/projects/abduco/abduco-0.1.tar.gz)
+   [released](https://lists.suckless.org/dev/1407/22703.html) (05.07.2014)
+ * [Initial announcement](https://lists.suckless.org/dev/1403/20372.html)
    on the suckless development mailing list (08.03.2014)
 
 ## Download
@@ -161,9 +161,9 @@ You can always fetch the current code base from the git repository
 located at [Github](https://github.com/martanne/abduco/) or
 [Sourcehut](https://git.sr.ht/~martanne/abduco).
 
-If you have comments, suggestions, ideas, a bug report, a patch or
-something else related to abduco then write to the
-[suckless developer mailing list](http://suckless.org/community)
+If you have comments, suggestions, ideas, a bug report, a patch or something
+else related to abduco then write to the
+[suckless developer mailing list](https://suckless.org/community)
 or contact me directly.
 
 ### Debugging
