@@ -1,7 +1,9 @@
-# normal ignores
-.*
-*.[ao]
-*.lo
-*.so
-tags
-!.gitignore
+/config.h
+/config.mk
+/abduco
+*.css
+*.gcda
+*.gcno
+*.gcov
+*.html
+*.o

@@ -7,9 +7,9 @@ run in the background - and then later reattached. Together with
 [dvtm](http://www.brain-dump.org/projects/dvtm) it provides a
 simpler and cleaner alternative to tmux or screen.
 
-![abduco+dvtm demo](https://raw.githubusercontent.com/martanne/abduco/gh-pages/screencast.gif)
+![abduco+dvtm demo](https://raw.githubusercontent.com/martanne/abduco/gh-pages/screencast.gif#center)
 
-abduco is in many ways very similar to [dtach]("http://dtach.sf.net)
+abduco is in many ways very similar to [dtach](http://dtach.sf.net)
 but is a completely independent implementation which is actively maintained,
 contains no legacy code, provides a few additional features, has a
 cleaner, more robust implementation and is distributed under the
@@ -34,23 +34,13 @@ cleaner, more robust implementation and is distributed under the
 
 ## Download
 
-Either download the latest source tarball
-[abduco-0.5.tar.gz](http://www.brain-dump.org/projects/abduco/abduco-0.5.tar.gz)
-with sha1sum
-
-    37c51a0d5c3dd216251d84d5c1b550f119ad53c9  abduco-0.5.tar.gz
-
+Either download the latest [source tarball](https://github.com/martanne/abduco/releases),
 compile and install it
 
     ./configure && make && sudo make install
 
-or use one of the distribution provided binary packages:
-
- * [Debian](https://packages.debian.org/search?keywords=abduco)
- * [Fedora](https://admin.fedoraproject.org/pkgdb/package/abduco/)
- * [Gentoo](http://packages.gentoo.org/package/app-misc/abduco/)
- * [Ubuntu](http://packages.ubuntu.com/search?keywords=abduco)
- * [Mac OS X](http://www.braumeister.org/formula/abduco) via homebrew
+or use one of the distribution provided
+[binary packages](https://repology.org/project/abduco/packages).
 
 ## Quickstart
 
@@ -167,21 +157,14 @@ command line options.
 
 ## Development
 
-You can always fetch the current code base from the git repository.
+You can always fetch the current code base from the git repository
+located at [Github](https://github.com/martanne/abduco/) or
+[Sourcehut](https://git.sr.ht/~martanne/abduco).
 
-    git clone https://github.com/martanne/abduco.git
-
-or
-
-    git clone git://repo.or.cz/abduco.git
-
-If you have comments, suggestions, ideas, a bug report, a patch or something
-else related to abduco then write to the
+If you have comments, suggestions, ideas, a bug report, a patch or
+something else related to abduco then write to the
 [suckless developer mailing list](http://suckless.org/community)
-or contact me directly mat[at]brain-dump.org.
-
-[![Build Status](https://travis-ci.org/martanne/abduco.svg?branch=master)](https://travis-ci.org/martanne/abduco)
-[![Coverity Scan Build Status](https://scan.coverity.com/projects/4285/badge.svg)](https://scan.coverity.com/projects/4285)
+or contact me directly.
 
 ### Debugging
 
@@ -194,8 +177,8 @@ to temporary files as follows:
 
 If you want to run client and server with one command (e.g. using the `-c`
 option) then within `gdb` the option `set follow-fork-mode {child,parent}`
-might be useful. Similarly to get a syscall trace `strace -o abduco -ff [abduco-cmd]`
-proved to be handy.
+might be useful. Similarly to get a syscall trace `strace -o abduco -ff
+[abduco-cmd]` proved to be handy.
 
 ## License
 

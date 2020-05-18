@@ -7,6 +7,9 @@ ABDUCO_OPTS="-e ^\\"
 [ ! -z "$1" ] && ABDUCO="$1"
 [ ! -x "$ABDUCO" ] && echo "usage: $0 /path/to/abduco" && exit 1
 
+TESTS_OK=0
+TESTS_RUN=0
+
 detach() {
 	sleep 1
 	printf ""
@@ -74,12 +77,14 @@ run_test_attached() {
 	local output="$name.out"
 	local output_expected="$name.expected"
 
+	TESTS_RUN=$((TESTS_RUN + 1))
 	echo -n "Running test attached: $name "
 	expected_abduco_attached_output "$name" "$cmd" > "$output_expected" 2>&1
-	$ABDUCO -c "$name" $cmd 2>&1 | sed 's/.$//' > "$output"
 
-	if diff -u "$output_expected" "$output" && check_environment; then
+	if $ABDUCO -c "$name" $cmd 2>&1 | sed 's/.$//' > "$output" && sleep 1 &&
+	   diff -u "$output_expected" "$output" && check_environment; then
 		rm "$output" "$output_expected"
+		TESTS_OK=$((TESTS_OK + 1))
 		echo "OK"
 		return 0
 	else
@@ -97,6 +102,7 @@ run_test_detached() {
 	local output="$name.out"
 	local output_expected="$name.expected"
 
+	TESTS_RUN=$((TESTS_RUN + 1))
 	echo -n "Running test detached: $name "
 	expected_abduco_detached_output "$name" "$cmd" > "$output_expected" 2>&1
 
@@ -104,6 +110,7 @@ run_test_detached() {
 	   $ABDUCO -a "$name" 2>&1 | sed 's/.$//' > "$output" &&
 	   diff -u "$output_expected" "$output" && check_environment; then
 		rm "$output" "$output_expected"
+		TESTS_OK=$((TESTS_OK + 1))
 		echo "OK"
 		return 0
 	else
@@ -121,6 +128,7 @@ run_test_attached_detached() {
 	local output="$name.out"
 	local output_expected="$name.expected"
 
+	TESTS_RUN=$((TESTS_RUN + 1))
 	echo -n "Running test: $name "
 	$cmd >/dev/null 2>&1
 	expected_abduco_epilog "$name" $? > "$output_expected" 2>&1
@@ -129,6 +137,7 @@ run_test_attached_detached() {
 	   $ABDUCO -a "$name" 2>&1 | tail -1 | sed 's/.$//' > "$output" &&
 	   diff -u "$output_expected" "$output" && check_environment; then
 		rm "$output" "$output_expected"
+		TESTS_OK=$((TESTS_OK + 1))
 		echo "OK"
 		return 0
 	else
@@ -144,6 +153,7 @@ run_test_dvtm() {
 		return 0;
 	fi
 
+	TESTS_RUN=$((TESTS_RUN + 1))
 	local name="dvtm"
 	local output="$name.out"
 	local output_expected="$name.expected"
@@ -152,6 +162,7 @@ run_test_dvtm() {
 	if dvtm_session | $ABDUCO -c "$name" > "$output" 2>&1 &&
 	   diff -u "$output_expected" "$output" && check_environment; then
 		rm "$output" "$output_expected"
+		TESTS_OK=$((TESTS_OK + 1))
 		echo "OK"
 		return 0
 	else
@@ -162,8 +173,8 @@ run_test_dvtm() {
 
 test_non_existing_command || echo "Execution of non existing command FAILED"
 
-run_test_attached "seq" "seq 1 1000"
-run_test_detached "seq" "seq 1 1000"
+run_test_attached "awk" "awk 'BEGIN {for(i=1;i<=1000;i++) print i}'"
+run_test_detached "awk" "awk 'BEGIN {for(i=1;i<=1000;i++) print i}'"
 
 run_test_attached "false" "false"
 run_test_detached "false" "false"
@@ -200,3 +211,5 @@ run_test_attached_detached "attach-detach" "./long-running.sh"
 rm ./long-running.sh
 
 run_test_dvtm
+
+[ $TESTS_OK -eq $TESTS_RUN ]

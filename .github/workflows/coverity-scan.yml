@@ -1,0 +1,46 @@
+name: Coverity Scan
+
+env:
+  PROJECT: abduco
+
+on:
+  schedule:
+    - cron: '0 0 * * 0' # once a week
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Download Coverity Build Tool
+      run: |
+        wget -q https://scan.coverity.com/download/cxx/linux64 --post-data "token=$TOKEN&project=martanne/${PROJECT}" -O cov-analysis-linux64.tar.gz
+        mkdir cov-analysis-linux64
+        tar xzf cov-analysis-linux64.tar.gz --strip 1 -C cov-analysis-linux64
+      env:
+        TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
+
+    - name: Configure
+      run: ./configure
+
+    - name: Build with cov-build
+      run: |
+        export PATH=$(pwd)/cov-analysis-linux64/bin:$PATH
+        cov-build --dir cov-int make
+
+    - name: Submit the result to Coverity Scan
+      run: |
+        tar czvf ${PROJECT}.tgz cov-int
+        curl \
+          --form project=martanne/${PROJECT} \
+          --form token=$TOKEN \
+          --form email=mat@brain-dump.org \
+          --form file=@${PROJECT}.tgz \
+          --form version=trunk \
+          --form description="`./${PROJECT} -v`" \
+          https://scan.coverity.com/builds?project=martanne/${PROJECT}
+      env:
+        TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
