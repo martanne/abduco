@@ -30,6 +30,12 @@
 .Cm name
 .Cm command Op args ...
 .
+.Nm
+.Fl N
+.Op options ...
+.Cm name
+.Cm command Op args ...
+.
 .Sh DESCRIPTION
 .
 .Nm
@@ -86,6 +92,8 @@ Try to connect to an existing session, upon failure create said session and atta
 Create a new session and attach immediately to it.
 .It Fl n
 Create a new session but do not attach to it.
+.It Fl N
+Create a new session but do not attach to it and stay in the forground until the program exits.
 .El
 .
 .Ss OPTIONS

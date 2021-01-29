@@ -513,6 +513,59 @@ static bool create_session(const char *name, char * const argv[]) {
 	return true;
 }
 
+static bool launch_session(const char *name, char * const argv[]) {
+	/* this is basically create_session without the double fork
+	 */
+	char errormsg[255];
+	struct sigaction sa;
+
+	if (session_exists(name)) {
+		errno = EADDRINUSE;
+		return false;
+	}
+
+	if ((server.socket = server_create_socket(name)) == -1)
+		return false;
+
+	sa.sa_flags = 0;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_handler = server_pty_died_handler;
+	sigaction(SIGCHLD, &sa, NULL);
+	switch (server.pid = forkpty(&server.pty, NULL, has_term ? &server.term : NULL, &server.winsize)) {
+	case 0: /* child = user application process */
+		execvp(argv[0], argv);
+		snprintf(errormsg, sizeof(errormsg), "server-execvp: %s: %s\n",
+			 argv[0], strerror(errno));
+		_exit(EXIT_FAILURE);
+		break;
+	case -1: /* forkpty failed */
+		snprintf(errormsg, sizeof(errormsg), "server-forkpty: %s\n", strerror(errno));
+		_exit(EXIT_FAILURE);
+		break;
+	default: /* parent = server process */
+		sa.sa_handler = server_sigterm_handler;
+		sigaction(SIGTERM, &sa, NULL);
+		sigaction(SIGINT, &sa, NULL);
+		sigaction(SIGHUP, &sa, NULL);
+		sa.sa_handler = server_sigusr1_handler;
+		sigaction(SIGUSR1, &sa, NULL);
+		sa.sa_handler = SIG_IGN;
+		sigaction(SIGPIPE, &sa, NULL);
+#ifdef NDEBUG
+		int fd = open("/dev/null", O_RDWR);
+		if (fd != -1) {
+			dup2(fd, STDIN_FILENO);
+			dup2(fd, STDOUT_FILENO);
+			dup2(fd, STDERR_FILENO);
+			close(fd);
+		}
+#endif /* NDEBUG */
+		server_mainloop();
+		break;
+	}
+	return true;
+}
+
 static bool attach_session(const char *name, const bool terminate) {
 	if (server.socket > 0)
 		close(server.socket);
@@ -606,12 +659,13 @@ int main(int argc, char *argv[]) {
 	server.name = basename(argv[0]);
 	gethostname(server.host+1, sizeof(server.host) - 1);
 
-	while ((opt = getopt(argc, argv, "aAclne:fpqrv")) != -1) {
+	while ((opt = getopt(argc, argv, "aAclnNe:fpqrv")) != -1) {
 		switch (opt) {
 		case 'a':
 		case 'A':
 		case 'c':
 		case 'n':
+		case 'N':
 			action = opt;
 			break;
 		case 'e':
@@ -679,10 +733,11 @@ int main(int argc, char *argv[]) {
 		server.winsize.ws_row = 25;
 	}
 
-	server.read_pty = (action == 'n');
+	server.read_pty = (action == 'n') || (action == 'N');
 
 	redo:
 	switch (action) {
+	case 'N':
 	case 'n':
 	case 'c':
 		if (force) {
@@ -692,6 +747,11 @@ int main(int argc, char *argv[]) {
 			}
 			if (session_exists(server.session_name))
 				attach_session(server.session_name, false);
+		}
+		if (action == 'N') {
+			if (!launch_session(server.session_name, cmd))
+				die("launch-session");
+			break;
 		}
 		if (!create_session(server.session_name, cmd))
 			die("create-session");
