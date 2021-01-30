@@ -63,13 +63,6 @@ static int client_mainloop(void) {
 	sigprocmask(SIG_BLOCK, &blockset, NULL);
 
 	client.need_resize = true;
-	Packet pkt = {
-		.type = MSG_ATTACH,
-		.u.i = client.flags,
-		.len = sizeof(pkt.u.i),
-	};
-	client_send_packet(&pkt);
-
 	while (server.running) {
 		fd_set fds;
 		FD_ZERO(&fds);

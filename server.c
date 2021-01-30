@@ -222,11 +222,26 @@ static void server_mainloop(void) {
 				case MSG_CONTENT:
 					server_write_pty(&client_packet);
 					break;
-				case MSG_ATTACH:
+				case MSG_ATTACH: {
+					Packet pkt;
+					if (!server.running && server.exit_status != -1) {
+						pkt = (Packet) {
+							.type = MSG_EXIT,
+							.u.i = server.exit_status,
+							.len = sizeof(pkt.u.i),
+						};
+					} else {
+						pkt = (Packet) {
+							.type = MSG_CONTENT,
+							.len = 0,
+						};
+					}
+					server_send_packet(c, &pkt);
 					c->flags = client_packet.u.i;
 					if (c->flags & CLIENT_LOWPRIORITY)
 						server_sink_client();
 					break;
+				}
 				case MSG_RESIZE:
 					c->state = STATE_ATTACHED;
 					if (!(c->flags & CLIENT_READONLY) && c == server.clients) {

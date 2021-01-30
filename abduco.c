@@ -518,8 +518,6 @@ static bool attach_session(const char *name, const bool terminate) {
 		close(server.socket);
 	if ((server.socket = session_connect(name)) == -1)
 		return false;
-	if (server_set_socket_non_blocking(server.socket) == -1)
-		return false;
 
 	struct sigaction sa;
 	sa.sa_flags = 0;
@@ -529,9 +527,25 @@ static bool attach_session(const char *name, const bool terminate) {
 	sa.sa_handler = SIG_IGN;
 	sigaction(SIGPIPE, &sa, NULL);
 
-	client_setup_terminal();
-	int status = client_mainloop();
-	client_restore_terminal();
+	Packet pkt = {
+		.type = MSG_ATTACH,
+		.u.i = client.flags,
+		.len = sizeof(pkt.u.i),
+	};
+	client_send_packet(&pkt);
+
+	int status;
+	if (client_recv_packet(&pkt) && pkt.type == MSG_PID) {
+		if (server_set_socket_non_blocking(server.socket) == -1)
+			return false;
+		client_setup_terminal();
+		status = client_mainloop();
+		client_restore_terminal();
+	} else if (pkt.type == MSG_EXIT) {
+		status = pkt.u.i;
+		client_send_packet(&pkt);
+		close(server.socket);
+	}
 	if (status == -1) {
 		info("detached");
 	} else if (status == -EIO) {
