@@ -640,7 +640,7 @@ int main(int argc, char *argv[]) {
 			puts("abduco-"VERSION" © 2013-2018 Marc André Tanner");
 			exit(EXIT_SUCCESS);
 		case 'm':
-			action = opt;
+			mouse = true;
 		default:
 			usage();
 		}
