@@ -47,9 +47,7 @@ static void client_setup_terminal(void) {
 	cur_term.c_cc[VMIN] = 1;
 	cur_term.c_cc[VTIME] = 0;
 	tcsetattr(STDIN_FILENO, TCSANOW, &cur_term);
-	if (mouse) {
-		printf("\x1b[?1002h\x1b[?1006h");
-	}
+	printf("\x1b[?1002h\x1b[?1006h");
 
 	if (!alternate_buffer) {
 		printf("\033[?1049h\033[H");
