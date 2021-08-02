@@ -121,7 +121,7 @@ typedef struct {
 static Server server = { .running = true, .exit_status = -1, .host = "@localhost" };
 static Client client;
 static struct termios orig_term, cur_term;
-static bool has_term, alternate_buffer, quiet, passthrough, mouse;
+static bool has_term, alternate_buffer, quiet, passthrough;
 
 static struct sockaddr_un sockaddr = {
 	.sun_family = AF_UNIX,
