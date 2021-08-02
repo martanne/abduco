@@ -704,10 +704,6 @@ int main(int argc, char *argv[]) {
 		if (!attach_session(server.session_name, true))
 			die("attach-session");
 		break;
-	case 'm':
-		if (!attach_session(server.session_name, true))
-			die("attach-session");
-		break;
 	case 'A':
 		if (session_alive(server.session_name)) {
 			if (!attach_session(server.session_name, true))
