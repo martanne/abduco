@@ -25,6 +25,10 @@
 .Cm command Op args ...
 .
 .Nm
+.Fl d
+.Cm name
+.
+.Nm
 .Fl n
 .Op options ...
 .Cm name
@@ -84,6 +88,8 @@ Attach to an existing session.
 Try to connect to an existing session, upon failure create said session and attach immediately to it.
 .It Fl c
 Create a new session and attach immediately to it.
+.It Fl d
+Detect if the specified session exists, returning a successful exit status if true.
 .It Fl n
 Create a new session but do not attach to it.
 .El
