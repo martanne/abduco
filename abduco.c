@@ -606,11 +606,12 @@ int main(int argc, char *argv[]) {
 	server.name = basename(argv[0]);
 	gethostname(server.host+1, sizeof(server.host) - 1);
 
-	while ((opt = getopt(argc, argv, "aAclne:fpqrv")) != -1) {
+	while ((opt = getopt(argc, argv, "aAcdlne:fpqrv")) != -1) {
 		switch (opt) {
 		case 'a':
 		case 'A':
 		case 'c':
+		case 'd':
 		case 'n':
 			action = opt;
 			break;
@@ -712,6 +713,13 @@ int main(int argc, char *argv[]) {
 			goto redo;
 		}
 		break;
+    case 'd':
+        if (session_exists(server.session_name)) {
+            return EXIT_SUCCESS;
+        } else {
+            return EXIT_FAILURE;
+        }
+        break;
 	}
 
 	return 0;

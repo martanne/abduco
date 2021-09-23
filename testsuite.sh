@@ -171,6 +171,33 @@ run_test_dvtm() {
 	fi
 }
 
+run_test_detect_session() {
+	check_environment || return 1;
+
+	local name="$1"
+    local cmd="$2"
+	local output="$name.out"
+	local output_expected="$name.expected"
+
+	TESTS_RUN=$((TESTS_RUN + 1))
+	echo -n "Running test: $name "
+	$cmd >/dev/null 2>&1
+	expected_abduco_epilog "$name" $? > "$output_expected" 2>&1
+
+	if detach | $ABDUCO $ABDUCO_OPTS -c "$name" $cmd >/dev/null 2>&1 && sleep 3 &&
+       $ABDUCO -d "$name" &&
+	   $ABDUCO -a "$name" 2>&1 | tail -1 | sed 's/.$//' > "$output" &&
+	   diff -u "$output_expected" "$output" && check_environment; then
+		rm "$output" "$output_expected"
+		TESTS_OK=$((TESTS_OK + 1))
+		echo "OK"
+		return 0
+	else
+		echo "FAIL"
+		return 1
+	fi
+}
+
 test_non_existing_command || echo "Execution of non existing command FAILED"
 
 run_test_attached "awk" "awk 'BEGIN {for(i=1;i<=1000;i++) print i}'"
@@ -207,6 +234,7 @@ EOT
 chmod +x long-running.sh
 
 run_test_attached_detached "attach-detach" "./long-running.sh"
+run_test_detect_session "detect-session" "./long-running.sh"
 
 rm ./long-running.sh
 
