@@ -16,7 +16,7 @@ function _abduco() {
         ;;
         *) # Session
                 local sessions=$(abduco | tail -n+2 | cut -f 3)
-                COMPREPLY=($(compgen -W $sessions -- $2))
+                COMPREPLY=($(compgen -W "$sessions" -- $2))
                 [ -n "$2" ] && compopt -o plusdirs
         ;;
         esac
