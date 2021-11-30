@@ -178,6 +178,93 @@ static void server_atexit_handler(void) {
 	unlink(sockaddr.sun_path);
 }
 
+static void server_send_screen_buffer(Client *c) {
+	struct entry *np;
+
+	TAILQ_FOREACH_REVERSE(np, &server.screen, screenhead, entries) {
+		Packet pkt = {
+			.type = MSG_CONTENT,
+			.len = np->len,
+		};
+		strncpy(pkt.u.msg, np->data, np->len);
+		server_send_packet(c, &pkt);
+	}
+}
+
+static void server_preserve_screen_data(Packet *pkt) {
+	char *str, *end;
+	uint32_t len;
+	struct entry *scrline = NULL;
+
+	if (screen_max_rows == 0 || pkt->len <= 0 || pkt->type != MSG_CONTENT)
+		return;
+
+	str = pkt->u.msg;
+	len = pkt->len;
+	end = str + len;
+
+	while (str != end) {
+		char *data;
+		uint32_t i, dlen;
+
+		bool newline = false;
+		char *token = end;
+
+		for (i = 0; i < len; i++) {
+			if (str[i] == '\n') {
+				token = str + i + 1;
+				newline = true;
+				break;
+			}
+		}
+
+		if ((dlen = token - str) <= 0)
+			break;
+
+		scrline = TAILQ_FIRST(&server.screen);
+
+		if (scrline && !scrline->complete) {
+			data = realloc(scrline->data, scrline->len + dlen);
+			if (!data)
+				die("unable to extend string in the screen buffer");
+
+			memcpy(data + scrline->len, str, dlen);
+
+			scrline->complete = newline;
+			scrline->data = data;
+			scrline->len += dlen;
+		} else {
+			data = malloc(dlen);
+			if (!data)
+				die("unable to allocate memory for new line in the screen buffer");
+
+			memcpy(data, str, dlen);
+
+			scrline = malloc(sizeof(*scrline));
+			if (!scrline)
+				die("unable to allocate memory for screen buffer element");
+
+			scrline->complete = newline;
+			scrline->data = data;
+			scrline->len = dlen;
+
+			TAILQ_INSERT_HEAD(&server.screen, scrline, entries);
+			server.screen_rows++;
+
+			if (server.screen_rows > screen_max_rows) {
+				scrline = TAILQ_LAST(&server.screen, screenhead);
+				TAILQ_REMOVE(&server.screen, scrline, entries);
+				free(scrline->data);
+				free(scrline);
+				server.screen_rows--;
+			}
+		}
+
+		str = token;
+		len -= dlen;
+	}
+}
+
 static void server_mainloop(void) {
 	atexit(server_atexit_handler);
 	fd_set new_readfds, new_writefds;
@@ -186,6 +273,8 @@ static void server_mainloop(void) {
 	FD_SET(server.socket, &new_readfds);
 	int new_fdmax = server.socket;
 	bool exit_packet_delivered = false;
+
+	TAILQ_INIT(&server.screen);
 
 	if (server.read_pty)
 		FD_SET_MAX(server.pty, &new_readfds, new_fdmax);
@@ -213,8 +302,11 @@ static void server_mainloop(void) {
 		if (FD_ISSET(server.socket, &readfds))
 			server_accept_client();
 
-		if (FD_ISSET(server.pty, &readfds))
+		if (FD_ISSET(server.pty, &readfds)) {
 			pty_data = server_read_pty(&server_packet);
+			if (pty_data)
+				server_preserve_screen_data(&server_packet);
+		}
 
 		for (Client **prev_next = &server.clients, *c = server.clients; c;) {
 			if (FD_ISSET(c->socket, &readfds) && server_recv_packet(c, &client_packet)) {
@@ -226,6 +318,7 @@ static void server_mainloop(void) {
 					c->flags = client_packet.u.i;
 					if (c->flags & CLIENT_LOWPRIORITY)
 						server_sink_client();
+					server_send_screen_buffer(c);
 					break;
 				case MSG_RESIZE:
 					c->state = STATE_ATTACHED;
@@ -289,6 +382,16 @@ static void server_mainloop(void) {
 
 		if (server.running && server.read_pty)
 			FD_SET_MAX(server.pty, &new_readfds, new_fdmax);
+	}
+
+	struct entry *n1, *n2;
+
+	n1 = TAILQ_FIRST(&server.screen);
+	while (n1 != NULL) {
+		n2 = TAILQ_NEXT(n1, entries);
+		free(n1->data);
+		free(n1);
+		n1 = n2;
 	}
 
 	exit(EXIT_SUCCESS);

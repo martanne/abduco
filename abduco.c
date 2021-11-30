@@ -37,6 +37,7 @@
 #include <sys/wait.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <sys/queue.h>
 #if defined(__linux__) || defined(__CYGWIN__)
 # include <pty.h>
 #elif defined(__FreeBSD__) || defined(__DragonFly__)
@@ -102,6 +103,15 @@ struct Client {
 	Client *next;
 };
 
+struct entry {
+	char *data;
+	int len;
+	bool complete;
+	TAILQ_ENTRY(entry) entries;
+};
+
+TAILQ_HEAD(screenhead, entry);
+
 typedef struct {
 	Client *clients;
 	int socket;
@@ -109,6 +119,8 @@ typedef struct {
 	int exit_status;
 	struct termios term;
 	struct winsize winsize;
+	struct screenhead screen;
+	int screen_rows;
 	pid_t pid;
 	volatile sig_atomic_t running;
 	const char *name;
@@ -117,10 +129,11 @@ typedef struct {
 	bool read_pty;
 } Server;
 
-static Server server = { .running = true, .exit_status = -1, .host = "@localhost" };
+static Server server = { .running = true, .exit_status = -1, .host = "@localhost", .screen_rows = 0 };
 static Client client;
 static struct termios orig_term, cur_term;
 static bool has_term, alternate_buffer, quiet, passthrough;
+static int screen_max_rows = 120;
 
 static struct sockaddr_un sockaddr = {
 	.sun_family = AF_UNIX,
@@ -222,7 +235,7 @@ static void die(const char *s) {
 }
 
 static void usage(void) {
-	fprintf(stderr, "usage: abduco [-a|-A|-c|-n] [-p] [-r] [-q] [-l] [-f] [-e detachkey] name command\n");
+	fprintf(stderr, "usage: abduco [-a|-A|-c|-n] [-p] [-r] [-q] [-l] [-f] [-e detachkey] [-L num] name command\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -605,7 +618,7 @@ int main(int argc, char *argv[]) {
 	server.name = basename(argv[0]);
 	gethostname(server.host+1, sizeof(server.host) - 1);
 
-	while ((opt = getopt(argc, argv, "aAclne:fpqrv")) != -1) {
+	while ((opt = getopt(argc, argv, "aAclne:fpqrvL:")) != -1) {
 		switch (opt) {
 		case 'a':
 		case 'A':
@@ -634,6 +647,15 @@ int main(int argc, char *argv[]) {
 			break;
 		case 'l':
 			client.flags |= CLIENT_LOWPRIORITY;
+			break;
+		case 'L':
+			if (!optarg)
+				 usage();
+			screen_max_rows = atoi(optarg);
+			if (screen_max_rows < 0) {
+				fputs("ERROR: a negative value for the number of rows is meaningless.\n", stderr);
+				usage();
+			}
 			break;
 		case 'v':
 			puts("abduco-"VERSION" © 2013-2018 Marc André Tanner");
