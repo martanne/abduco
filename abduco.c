@@ -98,6 +98,7 @@ struct Client {
 	enum {
 		CLIENT_READONLY = 1 << 0,
 		CLIENT_LOWPRIORITY = 1 << 1,
+    CLIENT_NOALTBUF = 1 << 1,
 	} flags;
 	Client *next;
 };
@@ -223,7 +224,7 @@ static void die(const char *s) {
 }
 
 static void usage(void) {
-	fprintf(stderr, "usage: abduco [-a|-A|-c|-n] [-p] [-r] [-q] [-l] [-f] [-e detachkey] name command\n");
+	fprintf(stderr, "usage: abduco [-a|-A|-c|-n] [-p] [-r] [-q] [-l] [-f] [-s] [-e detachkey] name command\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -633,6 +634,9 @@ int main(int argc, char *argv[]) {
 		case 'r':
 			client.flags |= CLIENT_READONLY;
 			break;
+    case 's':
+      client.flags |= CLIENT_NOALTBUF;
+      break;
 		case 'l':
 			client.flags |= CLIENT_LOWPRIORITY;
 			break;
