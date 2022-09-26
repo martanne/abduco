@@ -105,7 +105,6 @@ struct Client {
 typedef struct {
 	Client *clients;
 	int socket;
-	Packet pty_output;
 	int pty;
 	int exit_status;
 	struct termios term;
