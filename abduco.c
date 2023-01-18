@@ -79,6 +79,8 @@ typedef struct {
 		struct {
 			uint16_t rows;
 			uint16_t cols;
+			uint16_t xpixels;
+			uint16_t ypixels;
 		} ws;
 		uint32_t i;
 		uint64_t l;
@@ -677,6 +679,8 @@ int main(int argc, char *argv[]) {
 	if (ioctl(STDIN_FILENO, TIOCGWINSZ, &server.winsize) == -1) {
 		server.winsize.ws_col = 80;
 		server.winsize.ws_row = 25;
+		server.winsize.ws_xpixel = 640;
+		server.winsize.ws_ypixel = 480;
 	}
 
 	server.read_pty = (action == 'n');

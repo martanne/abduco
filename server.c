@@ -234,6 +234,8 @@ static void server_mainloop(void) {
 						struct winsize ws = { 0 };
 						ws.ws_row = client_packet.u.ws.rows;
 						ws.ws_col = client_packet.u.ws.cols;
+						ws.ws_xpixel = client_packet.u.ws.xpixels;
+						ws.ws_ypixel = client_packet.u.ws.ypixels;
 						ioctl(server.pty, TIOCSWINSZ, &ws);
 					}
 					kill(-server.pid, SIGWINCH);

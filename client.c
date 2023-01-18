@@ -81,7 +81,7 @@ static int client_mainloop(void) {
 			if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) != -1) {
 				Packet pkt = {
 					.type = MSG_RESIZE,
-					.u = { .ws = { .rows = ws.ws_row, .cols = ws.ws_col } },
+					.u = { .ws = { .rows = ws.ws_row, .cols = ws.ws_col, .xpixels = ws.ws_xpixel, .ypixels = ws.ws_ypixel } },
 					.len = sizeof(pkt.u.ws),
 				};
 				if (client_send_packet(&pkt))
